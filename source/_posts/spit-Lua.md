@@ -10,12 +10,12 @@ Lua是一门很小巧的编程语言，不过使用过程中发下一些容易�
 
 * Lua的C API中的lua_isstring和lua_isnumber有点坑
 
+```
     LUA_API int lua_isnumber (lua_State *L, int idx) {
         lua_Number n;
         const TValue *o = index2addr(L, idx);
         return tonumber(o, &n);   // 坑，会执行转换成number类型改动栈
     }
-
 
     LUA_API int lua_isstring (lua_State *L, int idx) {
         const TValue *o = index2addr(L, idx);
@@ -25,54 +25,55 @@ Lua是一门很小巧的编程语言，不过使用过程中发下一些容易�
 
     -- 容易导致错误的使用比如
     lua_State *L = luaL_newstate();
-    	
-	luaL_dostring(L, "a={};a[2]=123");
-	lua_getglobal(L, "a");
+    luaL_dostring(L, "a={};a[2]=123");
+    lua_getglobal(L, "a");
 
-	lua_pushnil(L);
-	while(lua_next(L, -2))
-	{
-		auto is_string_key = lua_isstring(L, -2);
-		if (lua_isstring(L, -2))
-		{
-			printf("%s=", luaL_checkstring(L, -2));
-		}
+    lua_pushnil(L);
+    while(lua_next(L, -2))
+    {
+        auto is_string_key = lua_isstring(L, -2);
+        if (lua_isstring(L, -2))
+        {
+            printf("%s=", luaL_checkstring(L, -2));
+        }
         else if(lua_isinteger(L, -2))
-		{
-			printf("%d=", luaL_checkinteger(L, -2));
-		}
-		printf("%d\n", luaL_checkinteger(L, -1));
-		lua_pop(L, 1);
-	}
+        {
+            printf("%d=", luaL_checkinteger(L, -2));
+        }
+        printf("%d\n", luaL_checkinteger(L, -1));
+        lua_pop(L, 1);
+    }
 
-	lua_close(L);
+    lua_close(L);
 
     -- 以上这段代码会进程崩溃,因为错误的对int值进行了luaL_checkstring(或lua_tostring)导致当前lua虚拟堆栈被改写，然后lua_next的时候会找不到正确的key，然后报错崩溃
     -- 而下面这样写就正常了
     lua_State *L = luaL_newstate();
-    	
-	luaL_dostring(L, "a={};a[2]=123");
-	lua_getglobal(L, "a");
+        
+    luaL_dostring(L, "a={};a[2]=123");
+    lua_getglobal(L, "a");
 
-	lua_pushnil(L);
-	while(lua_next(L, -2))
-	{
-		auto is_string_key = lua_isstring(L, -2);
-		if(lua_isinteger(L, -2))
-		{
-			printf("%d=", luaL_checkinteger(L, -2));
-		} 
+    lua_pushnil(L);
+    while(lua_next(L, -2))
+    {
+        auto is_string_key = lua_isstring(L, -2);
+        if(lua_isinteger(L, -2))
+        {
+            printf("%d=", luaL_checkinteger(L, -2));
+        } 
         else if (lua_isstring(L, -2))
-		{
-			printf("%s=", luaL_checkstring(L, -2));
-		}
-		printf("%d\n", luaL_checkinteger(L, -1));
-		lua_pop(L, 1);
-	}
+        {
+            printf("%s=", luaL_checkstring(L, -2));
+        }
+        printf("%d\n", luaL_checkinteger(L, -1));
+        lua_pop(L, 1);
+    }
 
-	lua_close(L);
+    lua_close(L);
 
     -- lua_isnumber也有类似问题，实现中是调用lua_tonumber看能否转换成number类型来判断，而这会改动lua虚拟堆栈结构，在遍历lua table的时候有问题
+
+```
 
 * Lua的C API中的lua_type函数，得到的类型可以用来判断布尔，nil，字符串类型,比如lua_type(L, -1) == LUA_TSTRING,但是不能用来直接判断整数，不能lua_type(L, -1) == LUA_TNUMINT  因为Lua 5.3中虽然区分了int和number类型，把整数和浮点数区分出来了，但是lua_type的返回类型都是LUA_TNUMBER，LUA_TNUMINT和LUA_TNUMFLT都是LUA_TNUMBER进行偏移后的结果。需要判断类型的时候整数需要使用lua_isinteger(L,-1)或者lua_type(L, -1) & LUA_TNUMINT == LUA_TNUMINT，浮点数需要使用lua_type(L, -1) & LUA_TNUMFLT == LUA_TNUMFLT
 
