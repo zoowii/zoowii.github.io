@@ -75,7 +75,7 @@ Lua是一门很小巧的编程语言，不过使用过程中发下一些容易�
 
 ```
 
-* Lua的C API中的lua_type函数，得到的类型可以用来判断布尔，nil，字符串类型,比如lua_type(L, -1) == LUA_TSTRING,但是不能用来直接判断整数，不能lua_type(L, -1) == LUA_TNUMINT  因为Lua 5.3中虽然区分了int和number类型，把整数和浮点数区分出来了，但是lua_type的返回类型都是LUA_TNUMBER，LUA_TNUMINT和LUA_TNUMFLT都是LUA_TNUMBER进行偏移后的结果。需要判断类型的时候整数需要使用lua_isinteger(L,-1)或者lua_type(L, -1) & LUA_TNUMINT == LUA_TNUMINT，浮点数需要使用lua_type(L, -1) & LUA_TNUMFLT == LUA_TNUMFLT
+* Lua的C API中的lua_type函数，得到的类型可以用来判断布尔，nil，字符串类型,比如lua_type(L, -1) == LUA_TSTRING,但是不能用来直接判断整数，不能lua_type(L, -1) == LUA_TNUMINT  因为Lua 5.3中虽然区分了int和number类型，把整数和浮点数区分出来了，但是lua_type的返回类型都是LUA_TNUMBER，LUA_TNUMINT和LUA_TNUMFLT都是LUA_TNUMBER进行偏移后的结果。需要判断类型的时候整数需要使用lua_isinteger(L,-1)，浮点数需要使用lua_type(L, -1) == LUA_TNUMBER
 
 * Lua的一些函数比如#，ipairs, table中一些函数，都是只对Lua table中的数组部分起效果，建议不要对同一个lua table同时使用数组部分和哈希表部分，可能容易出错。我们的做法是对Lua语言做了修改，增加了可选的类型声明和编译期静态类型系统并区分了Array<T>和Map<T>类型，减少混用导致的问题。
 
