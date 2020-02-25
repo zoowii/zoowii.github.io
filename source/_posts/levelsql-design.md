@@ -42,11 +42,11 @@ tags: SQL, Database, MySQL, LevelSQL
 ## select语句
 server端通过MySQL网络协议接收到SQL语句后，先SQL解析器把SQL语句转换成抽象语法树AST，然后通过visitor模式把SQL AST转换成初始的执行计划树，执行计划树是一个由若干执行计划算子构成的树状结构，比如
 
-```
+```SQL
  select sum(employee.age)
  from employee join country on employee.country_id = country.id 
  where age > 18
- order by age asc 
+ order by age asc
  limit 10
 ```
 
@@ -86,7 +86,8 @@ FetchTask是一个可能有三种结果(部分数据, 执行结束sourceEnd, 错
 
 和普通KV接口区别是Key不是单个字符串或者字节数组，而是一个包含(命名空间 namespace: String, 序号 seq: Int)的元祖，value是普通的字节数组.
 
-```
+```Kotlin
+
 /** namespace是区分不同命名空间的区分词，比如不同索引，不同表有不同的namespace
  * seq是一个顺序增加的整数，一般每次只增加1(或者比较少的数量不要求必须递增1)
  */
