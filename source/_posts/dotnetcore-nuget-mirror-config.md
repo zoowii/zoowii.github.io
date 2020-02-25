@@ -27,5 +27,30 @@ azure在国内有个NuGet的mirror镜像，可以修改NuGet设置来使用.
 
 用以上内容修改或者替换Linux中的`~/.nuget/NuGet/NuGet.Config`或者Windows中的`%AppData%\NuGet\NuGet.Config`路径中的文件，如果用docker发布的在Dockerfile中自行修改即可.
 
+一个简单修改NuGet.Config文件的脚本如下
+
+```Bash
+
+#!/bin/bash
+#cat ./nuget.config > ~/.nuget/NuGet/NuGet.Config
+cat  > ~/.nuget/NuGet/NuGet.Config <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <packageSources>
+         <add key="cdn.azure.cn" value="https://nuget.cdn.azure.cn/v3/index.json" protocolVersion="3"/>
+         <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
+    </packageSources>
+    <packageRestore>
+         <add key="enabled" value="True" />
+         <add key="automatic" value="True" />
+    </packageRestore>
+    <bindingRedirects>
+         <add key="skip" value="False" />
+    </bindingRedirects>
+</configuration>
+EOF
+
+```
+
 
 本文参考了 [https://www.cnblogs.com/cmt/p/nuget-mirror.html](https://www.cnblogs.com/cmt/p/nuget-mirror.html)
