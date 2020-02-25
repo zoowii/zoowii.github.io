@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>关于将Django网站迁移到SAE上的问题 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="因为个人算是业余股民，偶尔会需要看看股市行情，但有懒得打开客户端，有的电脑也没装。晚上直接搜也不好查看个性化信息比如自选股什么的，所以之前有做过一个很简单的股票查看网站，只有自己一个人使用。使用Python3+Django开发，用requests抓取数据，使用gunicorn+sqlite部署到自己的VPS上，虽然目前还是0.0.1版，开发出第一个版本后就没改过了，不过勉强够自己使用了。 不过因为">
+<meta name="keywords" content="Python, Django">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于将Django网站迁移到SAE上的问题">
+<meta property="og:url" content="http://zoowii.com/2014/01/17/关于将Django网站迁移到SAE上的问题/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="因为个人算是业余股民，偶尔会需要看看股市行情，但有懒得打开客户端，有的电脑也没装。晚上直接搜也不好查看个性化信息比如自选股什么的，所以之前有做过一个很简单的股票查看网站，只有自己一个人使用。使用Python3+Django开发，用requests抓取数据，使用gunicorn+sqlite部署到自己的VPS上，虽然目前还是0.0.1版，开发出第一个版本后就没改过了，不过勉强够自己使用了。 不过因为">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.897Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="关于将Django网站迁移到SAE上的问题">
+<meta name="twitter:description" content="因为个人算是业余股民，偶尔会需要看看股市行情，但有懒得打开客户端，有的电脑也没装。晚上直接搜也不好查看个性化信息比如自选股什么的，所以之前有做过一个很简单的股票查看网站，只有自己一个人使用。使用Python3+Django开发，用requests抓取数据，使用gunicorn+sqlite部署到自己的VPS上，虽然目前还是0.0.1版，开发出第一个版本后就没改过了，不过勉强够自己使用了。 不过因为">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-关于将Django网站迁移到SAE上的问题" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      关于将Django网站迁移到SAE上的问题
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/01/17/关于将Django网站迁移到SAE上的问题/" class="article-date">
+  <time datetime="2014-01-16T16:00:00.000Z" itemprop="datePublished">2014-01-17</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>因为个人算是业余股民，偶尔会需要看看股市行情，但有懒得打开客户端，有的电脑也没装。晚上直接搜也不好查看个性化信息比如自选股什么的，所以之前有做过一个很简单的股票查看网站，只有自己一个人使用。使用Python3+Django开发，用requests抓取数据，使用gunicorn+sqlite部署到自己的VPS上，虽然目前还是0.0.1版，开发出第一个版本后就没改过了，不过勉强够自己使用了。</p>
+<p>不过因为自己的VPS是在美国纽约，速度比较慢，所以考虑到速度的原因，想迁移到国内的云服务上，既省得自己管理，便宜还速度快。</p>
+<p>所以今天晚上做了下迁移，首先是使用python2.7替换python3，这个很顺利，除了有几个文件有中午注释，文件开头加上# coding: UTF-8就好了。然后把sqlite转成mysql，python manage.py syncdb再用navicat神器把有数据的业务表迁移过去，导出sql，导入sae phpmyadmin就好了。数据库和python环境迁移成功。</p>
+<p>然后是代码了， 因为使用了django1.6 ，所以要手动拷贝sae中没有的库到一个lib文件夹下,<br><code>os.path.insert(0, lib文件夹路径)</code>即可。</p>
+<p>django settings中的修改，因为使用了dj_database_url，所以在index.wsgi中用sae.const中的mysql的用户名密码等信息给<code>os.environ[&#39;DATABASE_URL&#39;]</code>赋值即可。</p>
+<p>差不多了，上传代码运行，然后报错，在调用requests库时，报conn.sock.settimeout(…)中conn.sock为None。网上一搜是2013年后半年对urllib3库的一次修改造成的BUG，<a href="https://github.com/kennethreitz/requests/blame/master/requests/packages/urllib3/connectionpool.py#L307" target="_blank" rel="noopener">https://github.com/kennethreitz/requests/blame/master/requests/packages/urllib3/connectionpool.py#L307</a>，把第307, 308行的</p>
+<pre><code>else:
+    conn.sock.settimeout(read_timeout)
+</code></pre><p>中的”else:”改成”elif conn.sock: “即可。</p>
+<p>再次运行，成功。</p>
+<p>网址：<a href="http://stockkit.sinaapp.com/" target="_blank" rel="noopener">http://stockkit.sinaapp.com/</a></p>
+<p>不过说一句，SAE的静态文件加载太慢了啊，都是几百毫秒的级别，虽然还是比美国VPS快，但还是快得有限啊。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2014/01/23/Scheme的continuation的实现方式-SchemePy/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Scheme的continuation的实现方式(SchemePy)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/12/29/关于easy-install和pip的默认源pypi-python-org被中国大陆以外的局域网隔绝的解决方法/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">关于easy_install和pip的默认源pypi.python.org被中国大陆以外的局域网隔绝的解决方法</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

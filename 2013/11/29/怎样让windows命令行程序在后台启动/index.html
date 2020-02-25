@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>怎样让windows命令行程序在后台启动 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="因为有几个项目使用到redis，并且我是在windows下开发的，每次打开redis-server.exe之后一个黑色的命令行窗口放在那挺碍眼的，而且占着任务栏的位置也不方便，经常会点错。所以就想让它作为后台程序运行。不需要开机启动启动，因为我整月不关机很正常。 在Linux下实现这个目标很容易，只要在启动时程序路径后加上一个&amp;amp;符号即可。 但是Windows下的命令行可没有Linux下这么">
+<meta name="keywords" content="Windows">
+<meta property="og:type" content="article">
+<meta property="og:title" content="怎样让windows命令行程序在后台启动">
+<meta property="og:url" content="http://zoowii.com/2013/11/29/怎样让windows命令行程序在后台启动/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="因为有几个项目使用到redis，并且我是在windows下开发的，每次打开redis-server.exe之后一个黑色的命令行窗口放在那挺碍眼的，而且占着任务栏的位置也不方便，经常会点错。所以就想让它作为后台程序运行。不需要开机启动启动，因为我整月不关机很正常。 在Linux下实现这个目标很容易，只要在启动时程序路径后加上一个&amp;amp;符号即可。 但是Windows下的命令行可没有Linux下这么">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.901Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="怎样让windows命令行程序在后台启动">
+<meta name="twitter:description" content="因为有几个项目使用到redis，并且我是在windows下开发的，每次打开redis-server.exe之后一个黑色的命令行窗口放在那挺碍眼的，而且占着任务栏的位置也不方便，经常会点错。所以就想让它作为后台程序运行。不需要开机启动启动，因为我整月不关机很正常。 在Linux下实现这个目标很容易，只要在启动时程序路径后加上一个&amp;amp;符号即可。 但是Windows下的命令行可没有Linux下这么">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-怎样让windows命令行程序在后台启动" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      怎样让windows命令行程序在后台启动
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/11/29/怎样让windows命令行程序在后台启动/" class="article-date">
+  <time datetime="2013-11-28T16:00:00.000Z" itemprop="datePublished">2013-11-29</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>因为有几个项目使用到redis，并且我是在windows下开发的，每次打开redis-server.exe之后一个黑色的命令行窗口放在那挺碍眼的，而且占着任务栏的位置也不方便，经常会点错。所以就想让它作为后台程序运行。不需要开机启动启动，因为我整月不关机很正常。</p>
+<p>在Linux下实现这个目标很容易，只要在启动时程序路径后加上一个&amp;符号即可。 但是Windows下的命令行可没有Linux下这么强大，我网上搜了下，找到一个经验证有效的方法。</p>
+<p>以下都以上面提到的redis为例。</p>
+<p>首先建立一个.bat的批处理文件，任意起名，比如run-redis.vbs。 这个脚本随便放哪，不过为了方便查找已经避免写绝对路径，建议放到目标程序的同一个目录下。</p>
+<p>编辑其中内容为：</p>
+<pre><code>set ws = WScript.CreateObject(&quot;WScript.Shell&quot;)
+ws.Run &quot;redis-server.exe&quot;, 0
+</code></pre><p>其中ws.Run 后的字符串内容是要后台运行的程序的路径，这时候前面放到目标程序的同一目录下的好处就显露出来了，这样可以直接写相对路径，直接就是程序名。 </p>
+<p>要运行程序，只要双击这个.vbs脚本就可以运行了。在任务管理器中也可以看到redis-server.exe正在运行中。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2013/11/29/关于大数的乘法/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          关于大数的乘法
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/11/20/关于JavaScript的内存泄露检测/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">关于JavaScript的内存泄露检测</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

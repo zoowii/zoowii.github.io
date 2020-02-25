@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>使用jdbc向MySQL数据库插入大量数据 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="今天碰到一个问题，要将一个500*50000=25000000的excel表放入数据库进行分析，采用了mysql数据库。为了避免一个表有太多字段，所以拆成了竖轴A，横轴B，AB对应以及对应的值的表C，这样在C表中大概就有25000000条记录。在使用Java/Groovy向mysql数据库插入这些数据的过程中碰到了一些问题。java/groovy程序泡在2013 macbook air 13寸低配">
+<meta name="keywords" content="Database">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用jdbc向MySQL数据库插入大量数据">
+<meta property="og:url" content="http://zoowii.com/2013/11/18/使用jdbc向MySQL数据库插入大量数据/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="今天碰到一个问题，要将一个500*50000=25000000的excel表放入数据库进行分析，采用了mysql数据库。为了避免一个表有太多字段，所以拆成了竖轴A，横轴B，AB对应以及对应的值的表C，这样在C表中大概就有25000000条记录。在使用Java/Groovy向mysql数据库插入这些数据的过程中碰到了一些问题。java/groovy程序泡在2013 macbook air 13寸低配">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.892Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用jdbc向MySQL数据库插入大量数据">
+<meta name="twitter:description" content="今天碰到一个问题，要将一个500*50000=25000000的excel表放入数据库进行分析，采用了mysql数据库。为了避免一个表有太多字段，所以拆成了竖轴A，横轴B，AB对应以及对应的值的表C，这样在C表中大概就有25000000条记录。在使用Java/Groovy向mysql数据库插入这些数据的过程中碰到了一些问题。java/groovy程序泡在2013 macbook air 13寸低配">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-使用jdbc向MySQL数据库插入大量数据" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      使用jdbc向MySQL数据库插入大量数据
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/11/18/使用jdbc向MySQL数据库插入大量数据/" class="article-date">
+  <time datetime="2013-11-17T16:00:00.000Z" itemprop="datePublished">2013-11-18</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>今天碰到一个问题，要将一个500*50000=25000000的excel表放入数据库进行分析，采用了mysql数据库。为了避免一个表有太多字段，所以拆成了竖轴A，横轴B，AB对应以及对应的值的表C，这样在C表中大概就有25000000条记录。在使用Java/Groovy向mysql数据库插入这些数据的过程中碰到了一些问题。<br>java/groovy程序泡在2013 macbook air 13寸低配版+8G上。jvm的最大堆内存和初始堆内存都设置到512M以上,jdk 版本1.7，groovy 2.1<br>mysql使用官方版本，使用开发型配置，没有做其他任何优化或相关设置。</p>
+<p>mysql在远程服务器上，服务器配置不高，但带宽是10M。</p>
+<p>A, B, C表没有建立多余索引，只有主键和not null等基本约束，这是为了避免有索引对插入的影响。</p>
+<p>首先，为了简单，将excel表另存为csv格式再由groovy读取，这也是因为数据可是很简单。</p>
+<p>其次，最开始我是每次从CSV中读取一行，然后把这一行的500个数据插入C表中。这个时候，虽然使用了PrepareStatement 的addBatch, executeBatch功能，但是结果发现性能还是非常糟糕，一分钟1万条可能都没有，这个性能太糟糕了，我这还只是一个demo的数据而已。</p>
+<p>然后网上搜了一下，发现好像是jdbc的mysql驱动默认是批处理无效的，需要在连接字符串上加上rewriteBatchedStatements=true 变成类似”jdbc:mysql://${host}:$port/$dbName?rewriteBatchedStatements=true”的样子。试了一下，果然速度提高了10倍不止，不明觉厉。</p>
+<p>虽然速度提高很多，还是不够满意，不过目前也没什么其他好方法，目前这速度也可以完成任务，就先这么处理。</p>
+<p>网上还看到使用mysqldump可以达到非常快的速度，有时间可以试一下。</p>
+<p>发此文仅作记录分享，更深入的原因和处理方式有时间研究。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2013/11/20/关于JavaScript的内存泄露检测/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          关于JavaScript的内存泄露检测
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/11/12/About-Http-Payload/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">About-Http-Payload</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

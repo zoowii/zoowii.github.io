@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>关于easy_install和pip的默认源pypi.python.org被中国大陆以外的局域网隔绝的解决方法 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="最近在一台windows PC上配置python的环境时发现下载setuptools官方的ez_install.py，并且执行python ez_install.py install安装失败，无法下载。因为有在其他反面这种情况的多次经验，知道是国外的局域网不给力，连接不上中国大陆互联网。 以前我在其他电脑上都是为了加快pip安装速度，使用国内镜像安装，但是现在的问题是默认安装python后连eas">
+<meta name="keywords" content="Python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于easy_install和pip的默认源pypi.python.org被中国大陆以外的局域网隔绝的解决方法">
+<meta property="og:url" content="http://zoowii.com/2013/12/29/关于easy-install和pip的默认源pypi-python-org被中国大陆以外的局域网隔绝的解决方法/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="最近在一台windows PC上配置python的环境时发现下载setuptools官方的ez_install.py，并且执行python ez_install.py install安装失败，无法下载。因为有在其他反面这种情况的多次经验，知道是国外的局域网不给力，连接不上中国大陆互联网。 以前我在其他电脑上都是为了加快pip安装速度，使用国内镜像安装，但是现在的问题是默认安装python后连eas">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.895Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="关于easy_install和pip的默认源pypi.python.org被中国大陆以外的局域网隔绝的解决方法">
+<meta name="twitter:description" content="最近在一台windows PC上配置python的环境时发现下载setuptools官方的ez_install.py，并且执行python ez_install.py install安装失败，无法下载。因为有在其他反面这种情况的多次经验，知道是国外的局域网不给力，连接不上中国大陆互联网。 以前我在其他电脑上都是为了加快pip安装速度，使用国内镜像安装，但是现在的问题是默认安装python后连eas">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-关于easy-install和pip的默认源pypi-python-org被中国大陆以外的局域网隔绝的解决方法" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      关于easy_install和pip的默认源pypi.python.org被中国大陆以外的局域网隔绝的解决方法
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/12/29/关于easy-install和pip的默认源pypi-python-org被中国大陆以外的局域网隔绝的解决方法/" class="article-date">
+  <time datetime="2013-12-28T16:00:00.000Z" itemprop="datePublished">2013-12-29</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>最近在一台windows PC上配置python的环境时发现下载setuptools官方的ez_install.py，并且执行python ez_install.py install安装失败，无法下载。因为有在其他反面这种情况的多次经验，知道是国外的局域网不给力，连接不上中国大陆互联网。</p>
+<p>以前我在其他电脑上都是为了加快pip安装速度，使用国内镜像安装，但是现在的问题是默认安装python后连easy_install 和pip都没有，需要先安装它们，而安装它们，如果使用ez_install.py的话网络又不给力，所以要麻烦一点。</p>
+<p>首先，去setuptools官网，或者 <a href="http://pypi.douban.com/packages/source/s/setuptools/" target="_blank" rel="noopener">http://pypi.douban.com/packages/source/s/setuptools/</a> 这个链接下载最新的setuptools源码，解压后，执行python setup.py install安装。这时候可以发现Python的安装目录中多了一个Scripts文件夹，把这个文件夹加入PATH路径中。</p>
+<p>安装好之后，我们发现Scripts文件夹中只有easy_install，而没有pip。而我用pip更习惯。并且easy_install 安装包时也有访问不了pypi源的问题。</p>
+<p><code>easy_install --help</code>一下，可以看到有一个-i (–index-url)的选项，这就是指定pypi源的地方了。使用豆瓣的源试一下<br><code>easy_install pip -i http://pypi.douban.com/simple</code> 安装成功，并且速度很快。</p>
+<p>然后pip也可以这样安装各种Python库了，比如</p>
+<p><code>pip install flask -i http://pypi.douban.com/simple</code></p>
+<p>但是每次这么指定比较麻烦，可以在%HOME%目录下创建一个.pip的目录，里面创建一个pip.conf的文件，里面假如以下内容：</p>
+<pre><code>[global]
+index-url = http://pypi.douban.com/simple/
+</code></pre><p>接下来就可以直接pip install 库名称 或者依然 <code>pip install 库名称 -i http://pypi.douban.com/simple</code> 来安装Python库了</p>
+<p>另外，github上可以找到一个shadowsocks的工具，原本是Python实现的，不过后来有了很多其他语言的实现比如golang, nodejs等。这个工具可以使用加密的方式访问国外局域网，避免我们的信息暴露出去，并且也可以访问一下原本国外速度很慢的网站</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2014/01/17/关于将Django网站迁移到SAE上的问题/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          关于将Django网站迁移到SAE上的问题
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/12/21/XML文档安全查询的几种方法概述/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">XML文档安全查询的几种方法概述</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

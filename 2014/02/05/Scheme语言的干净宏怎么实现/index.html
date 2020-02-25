@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Scheme语言的干净宏怎么实现 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="在lisp中，宏的实现有一个小问题，就是宏展开后的结果如果使用了一些符号，这些符号如果与程序上下文中已有的符号重复会产生冲突，因此自然需要避免这个问题了。 如果是Lisp实现本身可以避免这个问题，就称作干净宏，否则就是不干净的宏。 common lisp的宏是不干净的，而scheme标准中宏是干净的。 先不管common lisp，本文只说怎么使得在实现scheme的宏的过程中，实现一个干净的宏系">
+<meta name="keywords" content="Scheme">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Scheme语言的干净宏怎么实现">
+<meta property="og:url" content="http://zoowii.com/2014/02/05/Scheme语言的干净宏怎么实现/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="在lisp中，宏的实现有一个小问题，就是宏展开后的结果如果使用了一些符号，这些符号如果与程序上下文中已有的符号重复会产生冲突，因此自然需要避免这个问题了。 如果是Lisp实现本身可以避免这个问题，就称作干净宏，否则就是不干净的宏。 common lisp的宏是不干净的，而scheme标准中宏是干净的。 先不管common lisp，本文只说怎么使得在实现scheme的宏的过程中，实现一个干净的宏系">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.879Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Scheme语言的干净宏怎么实现">
+<meta name="twitter:description" content="在lisp中，宏的实现有一个小问题，就是宏展开后的结果如果使用了一些符号，这些符号如果与程序上下文中已有的符号重复会产生冲突，因此自然需要避免这个问题了。 如果是Lisp实现本身可以避免这个问题，就称作干净宏，否则就是不干净的宏。 common lisp的宏是不干净的，而scheme标准中宏是干净的。 先不管common lisp，本文只说怎么使得在实现scheme的宏的过程中，实现一个干净的宏系">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Scheme语言的干净宏怎么实现" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Scheme语言的干净宏怎么实现
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/02/05/Scheme语言的干净宏怎么实现/" class="article-date">
+  <time datetime="2014-02-04T16:00:00.000Z" itemprop="datePublished">2014-02-05</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在lisp中，宏的实现有一个小问题，就是宏展开后的结果如果使用了一些符号，这些符号如果与程序上下文中已有的符号重复会产生冲突，因此自然需要避免这个问题了。</p>
+<p>如果是Lisp实现本身可以避免这个问题，就称作干净宏，否则就是不干净的宏。</p>
+<p>common lisp的宏是不干净的，而scheme标准中宏是干净的。</p>
+<p>先不管common lisp，本文只说怎么使得在实现scheme的宏的过程中，实现一个干净的宏系统。</p>
+<p>简单的实现方式就是在展开宏的过程中，执行宏的展开逻辑的代码时，里面的临时symbol都自动替换成一个从来没有使用过的符号。如此一来，自然避免了符号冲突。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2014/02/05/PHP实践经验总结一/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          PHP实践经验总结一
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/02/02/通用尾递归优化算法（包括自我尾递归和A-B-C/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">通用尾递归优化算法（包括自我尾递归和A-&gt;B, B-&gt;C, C-&gt;A的复杂尾递归的优化）</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

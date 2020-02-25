@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="因为我更喜欢使用Chrome作为日常浏览网页的浏览器,但是经常点着点着就打开了一大票标签页,然后一时间有没时间看完,这些东西有些也许就是一次性看完就扔的,保存到pocket感觉太大材小用而且容易让pocket中充满各种”垃圾”,如果关掉的话将来再找也麻烦. 所以我一般喜欢把这些标签页都拷贝到不是最常用的Safari浏览器中,方便下次阅读. 前两天我在QQ群里灌水时说到这个问题,然后听@Dawn提到">
+<meta name="keywords" content="Mac">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本">
+<meta property="og:url" content="http://zoowii.com/2014/05/07/一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="因为我更喜欢使用Chrome作为日常浏览网页的浏览器,但是经常点着点着就打开了一大票标签页,然后一时间有没时间看完,这些东西有些也许就是一次性看完就扔的,保存到pocket感觉太大材小用而且容易让pocket中充满各种”垃圾”,如果关掉的话将来再找也麻烦. 所以我一般喜欢把这些标签页都拷贝到不是最常用的Safari浏览器中,方便下次阅读. 前两天我在QQ群里灌水时说到这个问题,然后听@Dawn提到">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.888Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本">
+<meta name="twitter:description" content="因为我更喜欢使用Chrome作为日常浏览网页的浏览器,但是经常点着点着就打开了一大票标签页,然后一时间有没时间看完,这些东西有些也许就是一次性看完就扔的,保存到pocket感觉太大材小用而且容易让pocket中充满各种”垃圾”,如果关掉的话将来再找也麻烦. 所以我一般喜欢把这些标签页都拷贝到不是最常用的Safari浏览器中,方便下次阅读. 前两天我在QQ群里灌水时说到这个问题,然后听@Dawn提到">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/05/07/一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本/" class="article-date">
+  <time datetime="2014-05-06T16:00:00.000Z" itemprop="datePublished">2014-05-07</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>因为我更喜欢使用Chrome作为日常浏览网页的浏览器,但是经常点着点着就打开了一大票标签页,然后一时间有没时间看完,这些东西有些也许就是一次性看完就扔的,保存到pocket感觉太大材小用而且容易让pocket中充满各种”垃圾”,如果关掉的话将来再找也麻烦.</p>
+<p>所以我一般喜欢把这些标签页都拷贝到不是最常用的Safari浏览器中,方便下次阅读.</p>
+<p>前两天我在QQ群里灌水时说到这个问题,然后听@Dawn提到AppleScript好像可以解决这个问题.以前对AppleScript只听过没见过,今天晚上搜了下,果然神器,于是Google了一下找了几段demo代码对照着写了个,感觉还可以,对于一些小工具性质的软件来说,applescript实在是太方便了.</p>
+<p>这个AppleScript脚本虽然只有10几行,但是已经可以完成将当期chrome窗口中打开的标签页都在Safari中打开了,达到了我的目标,很好.</p>
+<p>直接上代码:</p>
+<p><a href="https://gist.github.com/zoowii/b1818fae22792e4e9bab" target="_blank" rel="noopener">https://gist.github.com/zoowii/b1818fae22792e4e9bab</a></p>
+<pre><code>tell application &quot;Google Chrome&quot;
+ set cur_win to first window
+ tell cur_win
+  set urls to URL of tabs of cur_win
+  set numOfUrls to (count urls)
+  -- repeat with i from 1 to (numOfUrls)
+  repeat with itemUrl in (urls)
+   -- set itemUrl to (item i of urls)
+   tell application &quot;Safari&quot; to tell first window to open location itemUrl
+  end repeat
+  tell application &quot;Safari&quot; to activate
+  tell application &quot;Safari&quot; to display dialog &quot;Move tabs from Chrome to Safari successfully&quot;
+ end tell
+end tell
+</code></pre><p>下载地址: <a href="http://pan.baidu.com/s/1sjHHmXJ" target="_blank" rel="noopener">http://pan.baidu.com/s/1sjHHmXJ</a></p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2014/11/10/一个js的小玩具ring-js-类似Ring风格的一个web-framework/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          一个js的小玩具ring.js,类似Ring风格的一个web-framework
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/05/04/Scheme实现的通用尾递归识别算法的demo实现-终于想到来些-拖延症/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Scheme实现的通用尾递归识别算法的demo实现,终于想到来些,拖延症...</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

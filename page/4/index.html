@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="专业闭关三十年">
+<meta property="og:url" content="http://zoowii.com/page/4/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:locale" content="default">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="专业闭关三十年">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-PHP获取payload" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/08/28/PHP获取payload/">PHP获取payload</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/08/28/PHP获取payload/" class="article-date">
+  <time datetime="2013-08-27T16:00:00.000Z" itemprop="datePublished">2013-08-28</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>PHP 中的$_POST只是在POST请求的Content-Type为url-encoded-form-…. 时的内容，但如果不是这个Content-Type，一般请求内容是在HTTP请求的BODY（request payload）中（不一定，HTTP请求是可以构造的）。而用$_POST读取这个payload内容就不行了，因为这个BODY内容是在HTTP请求的BODY中，类似于标准输入（事实是不同的），需要用file_get_contents(‘php://input’)读取</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-简单的工作流引擎的设计" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/08/22/简单的工作流引擎的设计/">简单的工作流引擎的设计</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/08/22/简单的工作流引擎的设计/" class="article-date">
+  <time datetime="2013-08-21T16:00:00.000Z" itemprop="datePublished">2013-08-22</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>最近工作中有几个项目因为逻辑太复杂，工作流比较复杂，如果手写工作量太大。而又因为不会用微软自家的工作量引擎，也感觉它的功能太多太复杂，觉得出了问题凭我刚学的C#水平不一定HOLD得住，所以设计并开发了一个简单的工作流引擎。</p>
+<p>首先，我把这个工作量引擎定义为一个状态机。为了在工作流中持久的保存数据，不因一次请求没有让工作量执行结束或者系统停止而消失，在每个工作流的实例中持有一个存储空间UserSpace，用来存放数据（键值对）。一个工作流有许多个状态，其中有一个开始状态(Start)和若干个结束状态（Final, Error, Timeout等）。一类工作流包含了多个Task，每个Task有自己的依赖条件（状态依赖，请求参数依赖，工作量存储内容的依赖等等）和结束状态。每次要执行工作流时，要构造一个请求传给工作流的实例，工作量引擎判断出在Tasks中满足依赖的所有Task，根据一定规则（状态依赖，优先级等）挑选出一个Task来执行（如果有的话），执行完这个Task之后把请求重新抛给工作流，循环，知道工作流达到结束状态或者没有Task可执行。如果工作流的状态没有到结束状态的话，下次还可以接收请求并继续执行。</p>
+<p>又因为工作流接收请求的时间不确定，这段时间可能发生各种事情，包括系统重启等，所以工作流肯定是不能放内存中的，需要序列化（字节流序列化，XML序列化或者其它方式）存储。每次Task执行后都要更新存储一次。第一次创建工作流之后，如果没有执行任何Task，也要存储一次（应该在创建并初始化工作流设置之后）。为了避免无意义的存储和安全考虑，在存储之前要去除掉工作流的UserSpace中的一些内容，比如user/request/response（自定义，这是我在web应用中用到的），如果有的话。</p>
+<p>因为工作流是一个状态机循环，一个请求在被一个Task处理之后又会重新抛入状态机循环，为了避免原本只需要被一次处理的参数被多次使用，甚至造成死循环等后果，最好在Task执行结尾清理掉这些参数（要判断是否request参数和workflow的UserSpace中是否都要删除）。当然，Task也可以把数据存入workflow的UserSpace。</p>
+<p>为了封装多个Task中可能的类似的行为，将Task的行为（处理函数还有各种事件回调机制）封装成IOperation接口，在这些方法中都是调用IOperation接口的实现类。</p>
+<p>每个Task有一个FinalState属性，表示Task正常完成之后工作流的当前状态会改成的属性。如果Task中没错处理，正常执行完成，则workflow的CurrentState就会改成这个值。但考虑到在业务中有类似审核时拒绝，打回编辑状态，或者跳过某些阶段的情况，在Task中，也可以通过ReDispatch(workflow, request, state)手动控制状态跳转。调用了这个函数后就不会发生自动把workflow当前状态修改成当前task的FinalState的情况了。不过要注意的是，这个函数调用后并不会直接去把request重新抛给工作流，执行其他task，而是会简单处理后立刻返回，后面代码马上就好执行的。</p>
+<p>顺便说一句，为了增加可扩展性，也方便在需要的时刻做处理，在工作流和Task的各个执行阶段（BeforeRequest, AfterRequst, BeforeProcessTask, OnFailRequirementsCheck等）都有事件回调，通过覆盖方法或注册处理函数的方式可以在这些时刻调用自定义的代码。</p>
+<p>再来说下Task的requirements，包含多种条件，比如对状态的依赖（多个中只要满足一个就通过，后面其他的条件是都要满足才可），request参数依赖(string键)，workflow的UserSpace内容的依赖(string键)，对request的依赖（一个函数(request) =&gt; bool），对workflow的UserSpace的依赖(一个函数(request) =&gt; bool)。为了方便代码生成已经避免修改Task的定义，将其中函数形式的依赖的值放在一个类Conditions（自定义）中（这个类的静态方法）</p>
+<p>考虑到工作流的使用场景非常可能有很多自定义的情况，所有Workflow，Conditions, Operation(s), WorkflowInitor(在workflow初始化和反序列化之后调用)，以及工作流的持久化方式等都做成可扩展的形式，根据具体项目需求可以通过继承类或接口来改变实现方式，在workflow的持久化上，使用了策略模式，通过定义新策略可以定义新的序列号和反序列化的方式，比如我们项目中就采用了sql存储（本工作流系统中内置了内存和redis的支持），并且sql存储的表结构也可以自定义。</p>
+<p>描述一下工作流的使用场景。 比如在创建一条记录的时候，先创建一个工作流的实例，构造一个请求request，把各种来源的需要的参数（比如HTTP请求参数，session内容，当前用户等）放入request.Parameters中，然后把这个request传给工作流workflow:</p>
+<pre><code>var workflow = new Workflow();
+var request = new Request();
+request.Parameters.Set(&quot;user&quot;, user);
+// ......
+var result = workflow.PostRequest(request);
+</code></pre><p>这样工作流引擎就好自动执行状态机了。 每个工作流实例默认都有一个唯一的ID，但如果有特别需求的话，比如工作流ID需要与在CreateTask中创建的记录的ID有关联的话，可以在这个CreateTask的代码中，手动根据新记录ID修改workflow的ID值，只要确保在工作流第一次持久化之前修改ID就好了（从这个角度讲，要控制工作流的持久化是在真正需要时才持久化，如果工作流创建后会执行task的话，不应该多余的持久化，在本工作流引擎中已经这样做了）。</p>
+<p>可以看到，这里有一个返回值result。但在状态机中怎么返回值呢，已经返回哪个task的值呢（如果执行了多个task的话）？ 在task中有一个属性result，每次执行前都会清空，在Task的处理代码中可以设置这个result属性，里面存放了返回值，这个返回值会传给工作流并最终返回。</p>
+<p>工作流的超时机制很简单，就不说了。</p>
+<p>最后，关于工作流和Task的定义，如果每次自己手写代码就不方便了。所以采用了代码生成的方式，通过配置xml文件（本来设计了一套类似ruby的语法了，不过写得时候觉得太麻烦，就先用xml了， 将来可能改掉），生产Workflow和Tasks的代码，里面包含各状态的定义，工作流的定义，采用的配置（持久化策略，WorkflowInitor类，继承的Workflow类等，包含的Task列表），各Task的依赖和FinalState等。 然后我们只需要根据生产的代码在编译时报的错写Conditions, Operations（Task的行为）, WorkflowInitor等等就好了。</p>
+<p>在初步使用了本工作流引擎后，一个很复杂的多级审核（审核人构成也比较复杂），并且有比较多的打回之前阶段的业务，除XML配置之外，主要代码变得只有两块：创建和审核（并且这个审核只需要写一次通用化的代码，用到多个审核中，甚至可以用到其他类似业务中），开发和维护方便多了。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-关于最小公倍数" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/05/23/关于最小公倍数/">关于最小公倍数</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/05/23/关于最小公倍数/" class="article-date">
+  <time datetime="2013-05-22T16:00:00.000Z" itemprop="datePublished">2013-05-23</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>求最大公约数的算法众所周知，使用辗转取余法（辗转相除法）</p>
+<p>但怎么求n个数的最小公倍数呢，</p>
+<p>常规解法有两种，</p>
+<p>一种是质因数分解，设每个出现过的质因数 p[i]所出现的最大次数为a[i]，则把所有Math.pow(p[i], a[i[)相乘即可，不过这种方法局限于</p>
+<p>正整数</p>
+<p>还有一种是假设两数分别为a, b，求出最大公约数gcd[0], a[1] = a/gcd[0], b[1] = b/gcd[0] ，再把a[i], b[i]这样处理直到a[i], b[i]互质为止，这是把所有的gcd[k] (k</p>
+<pre><code>(defn lcm [&amp; nums]
+  (let [index-of (fn [v l] 
+    (loop [i 0] 
+      ; get the index of value v in sequence l. assume v is in l
+      (if (= (nth l i) v)
+        i 
+        (recur (inc i)))) ) 
+    lcm-help (fn [now-nums origin-nums]
+                (if (apply = now-nums)
+                  (first now-nums)
+                  (let [min-value (apply min now-nums)
+                        min-value-index (index-of min-value now-nums)
+                        origin-val (nth origin-nums min-value-index)
+                        new-val (+ min-value origin-val)
+                        now-nums-vector (vec now-nums)
+                        new-now-nums-vector (assoc now-nums-vector 
+                                              min-value-index new-val)
+                        new-now-nums (seq new-now-nums-vector)]
+                    (recur new-now-nums origin-nums))))]
+      (lcm-help nums nums)))
+
+(println (lcm 7 5/7 2 3/5))
+(println (lcm 3/4 1/6))
+</code></pre><p>输出结果为210, 3/2</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-PHP与Java中运行时获取调用类方法（静态方法）的类名的方法" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/02/20/PHP与Java中运行时获取调用类方法（静态方法）的类名的方法/">PHP与Java中运行时获取调用类方法（静态方法）的类名的方法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/02/20/PHP与Java中运行时获取调用类方法（静态方法）的类名的方法/" class="article-date">
+  <time datetime="2013-02-19T16:02:57.000Z" itemprop="datePublished">2013-02-20</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>因为看不惯FengOffice中的ORM框架（好像是Zend中的，不过没用过Zend，不清楚），觉得太繁琐，所以打算自己用PHP实现一个轻量级，方便，尤其要容易写Model和容易使用。</p>
+<p>参考了Yii的orm框架的使用方式，或者说是ActiveRecord的使用方式，写了一个简单的orm，在实现的时候因为要在父类Model类中的静态方法中，动态获取调用它的是哪个类，从而知道使用的是Model的哪个子类。刚开始不清楚怎样获得，后来在一位学弟的提醒下知道了有get_called_class()这个方法可以动态获取调用者是哪个类，从而解决了这个问题。</p>
+<p>果然，百度是百度不出什么东西的啊。这个orm框架在稍作完善后再放到github(zoowii)上吧，先不管这个。</p>
+<p>因为学校学的主要语言是Java，所以想到Java中怎么解决这个问题，经过百度（因为十八大，谷哥不方便），找到了一篇帖子：<br><a href="http://hi.baidu.com/kittopang/item/a04c9ed12ff32aefb2f77711" target="_blank" rel="noopener">http://hi.baidu.com/kittopang/item/a04c9ed12ff32aefb2f77711</a></p>
+<p>因为这篇帖子中的情况是获取当前类，而不是运行时使用父类的静态方法，在这个父类的静态方法中动态获取它的调用者的类名，两者情况还是不一样的。所以我写了点Java代码测试了一下。</p>
+<pre><code>// Test3.java
+public class Test3 {
+  // output the current class name of the source file, so always output Test3
+  public static void f1() {
+    String className = new Object() {
+      public String getClassName() {
+        String nm = this.getClass().getName();
+        return nm.substring(0, nm.lastIndexOf(‘$’));
+      }
+    }.getClassName();
+    System.out.println(className);
+  }
+
+  // also output Test3
+  public static void f2() {
+    String className = new SecurityManager() {
+      public String getClassName() {
+        return getClassContext()[1].getName();
+      }
+    }.getClassName();
+    System.out.println(className);
+  }
+
+  public static void f3() {
+    String clsName = new Throwable().getStackTrace()[1].getClassName();
+    System.out.println(clsName);
+  }
+
+}
+// Test4.java
+public class Test4 extends Test3 {
+  public static void main(String[] args) {
+    f1();
+    f2();
+    f3();
+  }
+}
+</code></pre><p>编译后执行java Test4后得到输出结果:</p>
+<pre><code>Test3
+
+Test3
+
+Test4
+</code></pre><p>可见，只有第三种方法可以达到目的，也就是通过新建一个Throwable对象，调用getStackTrace()获取调用栈信息，对其中的第二个对象调用getClassName()方法。这种通过异常栈的方法获取信息的方法虽然能够达到目的，而且可以获取的信息很多，但到底不优雅，而且性能很差，但在不知道其他解决方案的情况下也只能这样了。如果有人知道其他方法的，请告诉我，谢谢。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Java执行机制" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/01/16/Java执行机制/">Java执行机制</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/01/16/Java执行机制/" class="article-date">
+  <time datetime="2013-01-15T16:01:20.000Z" itemprop="datePublished">2013-01-16</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Java 源码编译—–javac将java源码编译为class</p>
+<p>java源文件(.java)=&gt;分析和输入到符号表=&gt;注解(annotation)处理=&gt;语义分析和生成class文件</p>
+<p><strong> class文件的内容 </strong></p>
+<p>class文件的内容如下：</p>
+<ul>
+<li>结构信息：class文件格式版本号等信息=&gt;所以高版本的jdk生成的.class文件低版本的jre无法运行，反之可以运行</li>
+<li>元数据：类继承、接口实现、属性和方法的声明、常量池等信息<br>*方法信息：Java源文件中语句、表达式对应的信息，包括：字节码、异常处理器表、求值栈与局部变量区大小、求值栈的类型记录、调试用符号信息</li>
+</ul>
+<p>例子：</p>
+<pre><code>// Hello.java
+public class Hello {
+    public static void sayHi() {
+        System.out.println(&quot;Hello World!&quot;);
+    }
+    public static int add(int x, int y) {
+        return x + y;
+    }
+    public static void main(String[] args) {
+        sayHi();
+        System.out.println(add(4, 5));
+    }
+}
+</code></pre><p>使用javac -g Hello.java(使用javac Hello.java也可，但调试信息更少)产生Hello.class文件</p>
+<p>再使用javap -c Hello可以反编译字节码，输出如下：</p>
+<pre><code>// Compiled from &quot;Hello.java&quot;
+public class Hello {
+public Hello();
+    Code:
+       0: aload_0
+       1: invokespecial #1
+       // Method java/lang/Object.&quot;&quot;:()V
+       4: return        
+
+  public static void sayHi();
+    Code:
+       0: getstatic     #2
+       // Field java/lang/System.out:Ljava/io/PrintStream;
+       3: ldc           #3
+       // String Hello World!
+       5: invokevirtual #4
+       // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+       8: return        
+
+  public static int add(int, int);
+    Code:
+       0: iload_0
+       1: iload_1
+       2: iadd
+       3: ireturn       
+
+  public static void main(java.lang.String[]);
+    Code:
+       0: invokestatic  #5
+       // Method sayHi:()V
+       3: getstatic     #2
+       // Field java/lang/System.out:Ljava/io/PrintStream;
+       6: iconst_4
+       7: iconst_5
+       8: invokestatic  #6
+       // Method add:(II)I
+      11: invokevirtual #7
+      // Method java/io/PrintStream.println:(I)V
+      14: return
+}
+</code></pre><p><strong> 类执行机制 </strong></p>
+<ul>
+<li><p>字节码解释执行<br>  jvm有一套中间码，如invokestatic（调用static方法）、invokevirtual（调用对象实例方法）、invokeinterface（调用接口的方法）和invokespecial（调用private方法和方法）等。<br>  因此，jvm可以把这写中间码的指令解释执行，就像类似于脚本语言执行。只不过脚本语言执行的源文件是可读的文本文件，<br>  而jvm解释执行执行的是不可读的.class文件。</p>
+</li>
+<li><p>字节码编译执行<br>  解释执行效率低，所以jvm可以在运行时把.class文件编译成机器码执行，这就是JIT编译。<br>  所谓的Hotspot 就是执行时对执行频率高的代码编译执行，执行频率低的代码解释执行。</p>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-关于Java对象占用内存大小" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2012/12/19/关于Java对象占用内存大小/">关于Java对象占用内存大小</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2012/12/19/关于Java对象占用内存大小/" class="article-date">
+  <time datetime="2012-12-18T16:00:00.000Z" itemprop="datePublished">2012-12-19</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <pre><code>附加：以下内容很多错误，Java对象中还有很多其他内容， 比如指向类的指针，Flags（哈希值等），形状（是否是数组），如果是数组还有数组长度。后面才是正文内容。并且如果是String对象的话，String对象的正文部分是一个指向char[]的指针，这个char[]数组本身也有上面说的类型，Flags，形状，数组大小等基本信息和实际内容。并且在32bit和64bit的JVM上Java对象的基本结构占用内存也是不同的
+</code></pre><p>昨天面试有一道题是关于Java内存占用的。题目是求出<code>new String(&quot;a&quot;)</code>和<code>Map map = new HashMap(); map.put(&quot;a&quot;, &quot;a&quot;);</code></p>
+<p>回来之后我检测了一下，通过观察创建对象前后（创建大量一样的对象求均值）的已使用堆（<code>runtime.totalMemory() - runtime.freeMemory()</code>)内存大小的变化来计算Java对象的内存占用情况 。</p>
+<p>代码是网上找来的：</p>
+<pre><code>import java.util.HashMap;
+import java.util.Map;
+public class Test5 {
+    public static void main(String[] args) throws Exception {
+        // Warm up all classes/methods we will use
+        runGC();
+        usedMemory();
+        // Array to keep strong references to allocated objects
+        final int count = 100000;
+        Object[] objects = new Object[count];
+        long heap1 = 0;
+        // Allocate count+1 objects, discard the first one
+        for (int i = -1; i &lt; count; ++i) {
+            Object object = null;
+            // Instantiate your data here and assign it to object
+            // object = new Object();
+            // object = new Integer (i);
+            // object = new Long (i);
+            // object = new String (&quot;a&quot;);
+            Map object1 = new HashMap();
+            object1.put(&quot;a&quot;, &quot;a&quot;);
+            // object1.put(new String(&quot;a&quot;), new String(&quot;a&quot;));
+            // object = new byte [128][1]
+            if (i &gt;= 0)
+                objects[i] = object1;
+            else {
+                object1 = null; // Discard the warm up object
+                runGC();
+                heap1 = usedMemory(); // Take a before heap snapshot
+            }
+        }
+        runGC();
+        long heap2 = usedMemory(); // Take an after heap snapshot:
+        final int size = Math.round(((float) (heap2 - heap1)) / count);
+        System.out.println(&quot;&apos;before&apos; heap: &quot; + heap1 + &quot;, &apos;after&apos; heap: &quot;
+                            + heap2);
+        System.out.println(&quot;heap delta: &quot; + (heap2 - heap1) + &quot;, {&quot;
+                            + objects[0].getClass() + &quot;} size = &quot; + size + &quot; bytes&quot;);
+        for (int i = 0; i &lt; count; ++i)
+            objects[i] = null;
+            objects = null;
+        }
+
+    private static void runGC() throws Exception {
+        // It helps to call Runtime.gc()
+        // using several method calls:
+        for (int r = 0; r &lt; 4; ++r)
+            _runGC();
+    }
+
+    private static void _runGC() throws Exception {
+        long usedMem1 = usedMemory(), usedMem2 = Long.MAX_VALUE;
+        for (int i = 0; (usedMem1 &lt; usedMem2) &amp;&amp; (i &lt; 500); ++i) {
+            s_runtime.runFinalization();
+            s_runtime.gc();
+            Thread.currentThread().yield();
+            usedMem2 = usedMem1;
+            usedMem1 = usedMemory();
+        }
+    }
+
+    private static long usedMemory() {
+        return s_runtime.totalMemory() - s_runtime.freeMemory();
+    }
+
+    private static final Runtime s_runtime = Runtime.getRuntime();
+}
+</code></pre><p>运行结果表明：</p>
+<ul>
+<li>new String(“a”)占用24Bytes,</li>
+<li>Map map = new HashMap(); map.put(“a”, “a”); 占用168Bytes, </li>
+<li>Map map = new HashMap(); map.put(new String(“a”), new String(“a”));占用216Bytes.</li>
+</ul>
+<p>原理：Java 的String 对象有四个属性：</p>
+<pre><code>privatefinalcharvalue[];
+/** The offset is the first index of the storage that is used. */
+privatefinalintoffset;
+/** The count is the number of characters in the String. */
+privatefinalintcount;
+/** Cache the hash code for the string */
+private inthash;// Default to 0
+</code></pre><p>再考虑Java对象的8字节对齐，java采用utf16编码，每个char 占用2个字节， 另外，java对象有两个字（每个字2字节） 的头部，分别表示垃圾收集、hash码信息以及指向对象的类，即占有4个字节。 24字节应该还是差不多的。</p>
+<p>不过网上还有种说法是一个空字符串都占用40个字节，长为1的字符串也是占用40个字节，不清楚怎么算的，昨天面试官说的也是大概这个数据。</p>
+<p>引用：<a href="http://www.javaworld.com/javaworld/javatips/jw-javatip130.html?page=1" target="_blank" rel="noopener">http://www.javaworld.com/javaworld/javatips/jw-javatip130.html?page=1</a></p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-jquery选择地区插件（选择省市区，有地区代码" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2012/11/22/jquery选择地区插件（选择省市区，有地区代码/">jquery选择地区插件（选择省市区，有地区代码)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2012/11/22/jquery选择地区插件（选择省市区，有地区代码/" class="article-date">
+  <time datetime="2012-11-21T16:00:00.000Z" itemprop="datePublished">2012-11-22</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>项目地址：<a href="https://github.com/zoowii/jquery-city-select" target="_blank" rel="noopener">https://github.com/zoowii/jquery-city-select</a></p>
+<p>使用代码：</p>
+<pre><code>$(function() {
+    $.city_select($(&quot;#province_select&quot;), $(&quot;#my_input&quot;));
+});
+
+// html
+div#province_select
+input(type=&apos;text&apos;, id=&apos;my_input&apos;)
+</code></pre><p>很简单的代码就可以产生一组选择省市地的控件，可以设置默认选项，也可以设置选择时把地区代码写入哪个input的value中。</p>
+<p>效果如下：<br><img src="http://zoowiistore.qiniudn.com/city_select%E6%88%AA%E5%9B%BE.png" alt></p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-浏览器中的Scheme解释器" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2012/09/28/浏览器中的Scheme解释器/">浏览器中的Scheme解释器</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2012/09/28/浏览器中的Scheme解释器/" class="article-date">
+  <time datetime="2012-09-27T16:00:00.000Z" itemprop="datePublished">2012-09-28</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>前两天用javascript写了一个scheme解释器，已经可以运行在node.js和浏览器中。代码放在github上了。<br><a href="http://github.com/zoowii/SchemeScript" target="_blank" rel="noopener">http://github.com/zoowii/SchemeScript</a>，</p>
+<p><strong> Features </strong></p>
+<ul>
+<li>另外，<a href="http://aboutzoowii.duapp.com/app/js/SchemeScript" target="_blank" rel="noopener">http://aboutzoowii.duapp.com/app/js/SchemeScript</a> 中可以在线演示</li>
+<li>支持自然数，布尔值(true, false)，字符串(“…”)，变量定义</li>
+<li>可以定义函数了，并调用自定义函数，可以嵌套。示例中有求斐波那契数列的</li>
+<li>有list, cons, car, cdr, list-len, n-th, typeof, +, -, *, /等函数</li>
+<li>支持lambda表达式，柯里化</li>
+<li>所有合法的标识符都可以被重定义，包括内置函数名</li>
+<li>控制结构有if, cond[else]，都是作为内置函数实现的，可以赋给其他标识符，也可以重定义为其他值；cond控制结构的每一个条件分支都可以是多个form，执行时依次执行并返回最后一个form的值</li>
+<li>定义变量用define，定义函数用defn，也可以用define+lambda表达式定义函数</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-关于我的web服务器nodejsws" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2012/09/27/关于我的web服务器nodejsws/">关于我的web服务器nodejsws</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2012/09/27/关于我的web服务器nodejsws/" class="article-date">
+  <time datetime="2012-09-26T16:00:00.000Z" itemprop="datePublished">2012-09-27</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>之前，因为闲得无聊，用NodeJS写了一个web服务器，叫nodejsws(<a href="https://github.com/zoowii/nodejsws" target="_blank" rel="noopener">https://github.com/zoowii/nodejsws</a>)</p>
+<p>这几天把这个项目稍微做了一下，不过以前是以提供少量动态内容的静态资源服务器为目的的，现在编程了一个PHP的web服务器，已经成功的在nodejs上安装并运行wordpress了。<br>nodejs采用nodejs编写，使用php-cgi提供动态服务，不过因为不知道如何在php-cgi运行一次后不自动退出，又不打算使用php-fpm等开源项目（想自己造轮子），没有使用fastcgi，所以还是cgi模式，效率比较低，有空打算把nginx的fastcgi模块的源码看一下。另外nodejsws有空用其他语言改写，觉得nodejs和python一样，写写原型或者一些特定领域的应用比较好，其他的还是用其他语言吧。<br>nodejsws还有很多的BUG，有空再解决吧。暂时告一段落。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+  
+    <nav id="page-nav">
+      <a class="extend prev" rel="prev" href="/page/3/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span>
+    </nav>
+  
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

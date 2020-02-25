@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>一个简单的正则表达式和语法分析引擎的JavaScript实现parser.js | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前段时间为了克服拖延症,花了几天时间把以前一直想填的一个小坑填了,就是这个parser.js库了 https://github.com/zoowii/parser.js 懒得写,就把readme.md抄一部分过来 Features 实现了一个基于NFA的正则表达式引擎实现(正则表达式字符串的解析使用自身实现的底层API和下面的语法解析引擎来实现的),支持主要正则功能已经分组捕获等 实现了一个语法解">
+<meta name="keywords" content="JavaScript, 编译原理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一个简单的正则表达式和语法分析引擎的JavaScript实现parser.js">
+<meta property="og:url" content="http://zoowii.com/2015/04/06/一个简单的正则表达式和语法分析引擎的JavaScript实现parser-js/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="前段时间为了克服拖延症,花了几天时间把以前一直想填的一个小坑填了,就是这个parser.js库了 https://github.com/zoowii/parser.js 懒得写,就把readme.md抄一部分过来 Features 实现了一个基于NFA的正则表达式引擎实现(正则表达式字符串的解析使用自身实现的底层API和下面的语法解析引擎来实现的),支持主要正则功能已经分组捕获等 实现了一个语法解">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.891Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一个简单的正则表达式和语法分析引擎的JavaScript实现parser.js">
+<meta name="twitter:description" content="前段时间为了克服拖延症,花了几天时间把以前一直想填的一个小坑填了,就是这个parser.js库了 https://github.com/zoowii/parser.js 懒得写,就把readme.md抄一部分过来 Features 实现了一个基于NFA的正则表达式引擎实现(正则表达式字符串的解析使用自身实现的底层API和下面的语法解析引擎来实现的),支持主要正则功能已经分组捕获等 实现了一个语法解">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-一个简单的正则表达式和语法分析引擎的JavaScript实现parser-js" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      一个简单的正则表达式和语法分析引擎的JavaScript实现parser.js
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2015/04/06/一个简单的正则表达式和语法分析引擎的JavaScript实现parser-js/" class="article-date">
+  <time datetime="2015-04-06T11:13:10.000Z" itemprop="datePublished">2015-04-06</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>前段时间为了克服拖延症,花了几天时间把以前一直想填的一个小坑填了,就是这个parser.js库了 <a href="https://github.com/zoowii/parser.js" target="_blank" rel="noopener">https://github.com/zoowii/parser.js</a></p>
+<p>懒得写,就把readme.md抄一部分过来</p>
+<h2 id="Features"><a href="#Features" class="headerlink" title="Features"></a>Features</h2><ul>
+<li>实现了一个基于NFA的正则表达式引擎实现(正则表达式字符串的解析使用自身实现的底层API和下面的语法解析引擎来实现的),支持主要正则功能已经分组捕获等</li>
+<li>实现了一个语法解析引擎(支持左递归定义,语法定义简单)</li>
+<li>提供一个整合了词法分析和语法分析的API,方便使用,可以直接生成最终满足要求的抽象语法树(直接生成最初定义规则对应的抽象语法树,而不是解析过程中的中间产物)</li>
+<li>为了性能考虑,另外提供了一个使用内置正则引擎的快速词法分析实现,并且尽量兼容自己实现的正则API,从而可以在性能有问题时切换</li>
+<li>直接浏览器和Node.js环境,且不依赖任何第三方库</li>
+</ul>
+<h2 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a>Demo</h2><ul>
+<li>正则表达式引擎demo</li>
+</ul>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">console.<span class="built_in">log</span>('-----<span class="keyword">test</span> regex string reader=====');</span><br><span class="line"><span class="keyword">var</span> expr1 = RegexReader.<span class="keyword">read</span>(<span class="string">"\"</span>(a&#123;3,&#125;)(b+)(([c\\s\\.\\<span class="keyword">d</span>\\\\\\+\\u1234])*)");</span><br><span class="line">expr1.build();</span><br><span class="line">console.<span class="built_in">log</span>('regex build done');</span><br><span class="line"><span class="keyword">var</span> r1 = expr1.<span class="built_in">match</span>(<span class="string">"aabbbc 123+556end"</span>);</span><br><span class="line"><span class="keyword">var</span> r2 = expr1.<span class="built_in">match</span>(<span class="string">"\"</span>aaaabbbc 123+556");</span><br><span class="line"><span class="comment">// var expr2 = RegexReader.read("abc");</span></span><br><span class="line">console.<span class="built_in">log</span>(expr1.<span class="keyword">toString</span>());</span><br><span class="line">console.<span class="built_in">log</span>(r1.<span class="keyword">toString</span>());</span><br><span class="line">console.<span class="built_in">log</span>(r2.<span class="keyword">toString</span>());</span><br><span class="line"><span class="keyword">assert</span>.equal(false, r1.matched);</span><br><span class="line"><span class="keyword">assert</span>.equal(true, r2.matched);</span><br><span class="line">console.<span class="built_in">log</span>('-----end <span class="keyword">test</span> regex string reader-----');</span><br></pre></td></tr></table></figure>
+<ul>
+<li>语法分析demo</li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">console.log('-----test parser api-----');</span><br><span class="line">parser.clearVarCache();</span><br><span class="line"><span class="keyword">var</span> syntaxParserAndTokener = parser.buildSyntaxTreeParser(<span class="type">V</span>(<span class="symbol">'jso</span>n'), [</span><br><span class="line">    [<span class="type">V</span>(<span class="symbol">'boo</span>l'),</span><br><span class="line">        <span class="string">"(?:true|false)\\s*"</span>],</span><br><span class="line">    [<span class="type">V</span>(<span class="symbol">'numbe</span>r'),</span><br><span class="line">        <span class="string">"(?:[+-]?(?:(0x[0-9a-fA-F]+|0[0-7]+)|((?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?|NaN|Infinity)))\\s*"</span>],</span><br><span class="line">    [<span class="type">V</span>(<span class="symbol">'strin</span>g'),</span><br><span class="line">        <span class="string">"(?:(?:\"((?:\\.|[^\"])*)\"|'((?:\\.|[^'])*)'))\\s*"</span>],</span><br><span class="line">    [<span class="type">V</span>(<span class="symbol">'nam</span>e'),</span><br><span class="line">        <span class="type">V</span>(<span class="symbol">'strin</span>g')],</span><br><span class="line">    [<span class="type">V</span>(<span class="symbol">'valu</span>e'),</span><br><span class="line">        <span class="type">V</span>(<span class="symbol">'boo</span>l'), <span class="type">V</span>(<span class="symbol">'numbe</span>r'), <span class="type">V</span>(<span class="symbol">'strin</span>g'), <span class="type">V</span>(<span class="symbol">'json</span>-<span class="class"><span class="keyword">object</span>'), <span class="title">V</span>(<span class="params">'json-array'</span>)],</span></span><br><span class="line"><span class="class">    [<span class="type">V</span>('json-object-pair'),</span></span><br><span class="line"><span class="class">        [<span class="type">V</span>('name'), ":\\s*", <span class="type">V</span>('value')]],</span></span><br><span class="line"><span class="class">    [<span class="type">V</span>('json-object-pairs'),</span></span><br><span class="line"><span class="class">        <span class="type">V</span>('json-object-pair'),</span></span><br><span class="line"><span class="class">        [<span class="type">V</span>('json-object-pair'), ",\\s*", <span class="type">V</span>('json-object-pairs')]</span></span><br><span class="line"><span class="class">    ],</span></span><br><span class="line"><span class="class">    [<span class="type">V</span>('json-object'),</span></span><br><span class="line"><span class="class">        ["\\&#123;\\s*", <span class="type">V</span>('json-object-pairs'), "\\&#125;\\s*"]],</span></span><br><span class="line"><span class="class">    [<span class="type">V</span>('values'),</span></span><br><span class="line"><span class="class">        <span class="type">V</span>('value'),</span></span><br><span class="line"><span class="class">        [<span class="type">V</span>('value'), ",\\s*", <span class="type">V</span>('values')]],</span></span><br><span class="line"><span class="class">    [<span class="type">V</span>('json-array'),</span></span><br><span class="line"><span class="class">        ["\\[\\s*", <span class="type">V</span>('values'), "]<span class="title">\\s*</span>"]],</span></span><br><span class="line"><span class="class">    [<span class="type">V</span>('json'),</span></span><br><span class="line"><span class="class">        <span class="type">V</span>('json-object'), <span class="type">V</span>('json-array'), [<span class="type">V</span>("\\s+"), <span class="type">V</span>('json')]]</span></span><br><span class="line"><span class="class">])</span>;</span><br><span class="line"><span class="keyword">var</span> jsonParser = syntaxParserAndTokener.parser;</span><br><span class="line"><span class="keyword">var</span> tokenPatterns = syntaxParserAndTokener.token_patterns;</span><br><span class="line"><span class="keyword">var</span> text = '&#123;<span class="string">"name"</span>: <span class="string">"zoowii"</span>, <span class="string">"age"</span>: <span class="number">24</span>, <span class="string">"position"</span>: &#123;<span class="string">"country"</span>: <span class="string">"China"</span>, <span class="string">"city"</span>: <span class="string">"Nanjing"</span>&#125;&#125;';</span><br><span class="line"><span class="keyword">var</span> tokens = parser.generateTokenListUsingInnerRegex(tokenPatterns, text, console.log);</span><br><span class="line"><span class="keyword">var</span> json = jsonParser.parse(tokens);</span><br><span class="line">console.log(json.toString());</span><br><span class="line">console.log('-----end test parser api-----');</span><br></pre></td></tr></table></figure>
+<h2 id="目前支持的正则表达式特性"><a href="#目前支持的正则表达式特性" class="headerlink" title="目前支持的正则表达式特性"></a>目前支持的正则表达式特性</h2><ul>
+<li>‘|’</li>
+<li>( … ) group</li>
+<li>\d digit</li>
+<li>\w alpha or digit</li>
+<li>\uabcd unicode char support</li>
+<li>a-b char range</li>
+<li>[abc] union</li>
+<li>[^abc] except union</li>
+<li>abc concat</li>
+<li>a+ repeat at least one times</li>
+<li>a* repeat at least zero times</li>
+<li>a? repeat one or zero times</li>
+<li>a{m[,n]} repeat at least m times [and at most n times]</li>
+<li>. any char</li>
+<li>\s space</li>
+<li>\ + * { [ ( | \? . - … escape</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/03/08/spit-Lua/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Lua的一些坑的记录
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/04/06/一个把hibernate-jpa-jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">一个把hibernate/jpa/jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

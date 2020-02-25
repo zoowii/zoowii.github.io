@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>在Heroku上部署Clojure worker程序 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前几天想起Heroku上可以有worker程序，可以部署在后台一直运行的程序，而不是只可以部署web网站，真好VPS上跑的程序已经够多了，就把一个Clojure写的小程序部署上去了。 在部署这个Clojure程序中，有一些要注意的问题，特此记录。 首先就是，再Clojure项目的Leiningen的project.clj中，需要加入:main 指向起始函数-main所在的Clojure names">
+<meta name="keywords" content="Clojure">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在Heroku上部署Clojure worker程序">
+<meta property="og:url" content="http://zoowii.com/2014/04/08/在Heroku上部署Clojure-worker程序/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="前几天想起Heroku上可以有worker程序，可以部署在后台一直运行的程序，而不是只可以部署web网站，真好VPS上跑的程序已经够多了，就把一个Clojure写的小程序部署上去了。 在部署这个Clojure程序中，有一些要注意的问题，特此记录。 首先就是，再Clojure项目的Leiningen的project.clj中，需要加入:main 指向起始函数-main所在的Clojure names">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.900Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="在Heroku上部署Clojure worker程序">
+<meta name="twitter:description" content="前几天想起Heroku上可以有worker程序，可以部署在后台一直运行的程序，而不是只可以部署web网站，真好VPS上跑的程序已经够多了，就把一个Clojure写的小程序部署上去了。 在部署这个Clojure程序中，有一些要注意的问题，特此记录。 首先就是，再Clojure项目的Leiningen的project.clj中，需要加入:main 指向起始函数-main所在的Clojure names">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-在Heroku上部署Clojure-worker程序" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      在Heroku上部署Clojure worker程序
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/04/08/在Heroku上部署Clojure-worker程序/" class="article-date">
+  <time datetime="2014-04-07T16:00:00.000Z" itemprop="datePublished">2014-04-08</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>前几天想起Heroku上可以有worker程序，可以部署在后台一直运行的程序，而不是只可以部署web网站，真好VPS上跑的程序已经够多了，就把一个Clojure写的小程序部署上去了。</p>
+<p>在部署这个Clojure程序中，有一些要注意的问题，特此记录。</p>
+<p>首先就是，再Clojure项目的Leiningen的project.clj中，需要加入:main 指向起始函数-main所在的Clojure namespace，同时这个clojure namespace需要在ns定义处加上:gen-class限定(起始不一定是-main函数，可以给:gen-class传递参数指定函数前缀，默认是’-‘，会对应生成的Java类中的不带前缀的方法)。其实这不属于和Heroku部署特定相关的，而是所有Leiningen项目打包成可启动jar程序都要做的事。</p>
+<p>第二点是，再project.clj中显示指定:uberjar-name指定打包成的jar包名称，方便在Procfile中指定路径，另外还要显示指定:min-lein-version 为”2.0.0”（或者更高），这是因为我使用了Lein 2，而Heroku默认的Lein版本不是，不指定会启动失败</p>
+<p>第三点，我开始也没发现错误原因，是再看heroku logs的时候才发现的，直接按上面步骤再git push部署后，heroku logs中会报版本错误，这是因为Heroku现在默认是使用Java 6，而我项目中依赖Java 7，所以也需要显示指定Java版本，返回就是在项目根目录下新建一个名为system.properties的文本文件，内容是 java.runtime.version=1.7</p>
+<p>到这一步就差不多了，然后就可以git push部署了。</p>
+<p>之后还有一个小问题，也许你会发现git push后的程序无法执行，这是因为再Heroku Apps中的你这个应用的配置还是使用的web role数量为1，worker role数量为0，没有worker role当然无法运行了。所以只需要再Heroku管理界面中将web role设为0，worker role设为1即可。</p>
+<p>完成。</p>
+<p>感慨一下，Heroku实在是一个很好的PaaS平台，开发和部署都非常方便，文档也很不错，也不像GAE和SAE那样限制多多。最赞的是支持worker role。</p>
+<p>可惜在天朝速度实在太慢，好在worker role不在乎这点</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2014/05/04/Scheme实现的通用尾递归识别算法的demo实现-终于想到来些-拖延症/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Scheme实现的通用尾递归识别算法的demo实现,终于想到来些,拖延症...
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/03/05/Continuation的树结构与更新遍历查找算法/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Continuation的树结构与更新遍历查找算法</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

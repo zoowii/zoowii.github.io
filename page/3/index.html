@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="专业闭关三十年">
+<meta property="og:url" content="http://zoowii.com/page/3/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:locale" content="default">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="专业闭关三十年">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-关于easy-install和pip的默认源pypi-python-org被中国大陆以外的局域网隔绝的解决方法" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/12/29/关于easy-install和pip的默认源pypi-python-org被中国大陆以外的局域网隔绝的解决方法/">关于easy_install和pip的默认源pypi.python.org被中国大陆以外的局域网隔绝的解决方法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/12/29/关于easy-install和pip的默认源pypi-python-org被中国大陆以外的局域网隔绝的解决方法/" class="article-date">
+  <time datetime="2013-12-28T16:00:00.000Z" itemprop="datePublished">2013-12-29</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>最近在一台windows PC上配置python的环境时发现下载setuptools官方的ez_install.py，并且执行python ez_install.py install安装失败，无法下载。因为有在其他反面这种情况的多次经验，知道是国外的局域网不给力，连接不上中国大陆互联网。</p>
+<p>以前我在其他电脑上都是为了加快pip安装速度，使用国内镜像安装，但是现在的问题是默认安装python后连easy_install 和pip都没有，需要先安装它们，而安装它们，如果使用ez_install.py的话网络又不给力，所以要麻烦一点。</p>
+<p>首先，去setuptools官网，或者 <a href="http://pypi.douban.com/packages/source/s/setuptools/" target="_blank" rel="noopener">http://pypi.douban.com/packages/source/s/setuptools/</a> 这个链接下载最新的setuptools源码，解压后，执行python setup.py install安装。这时候可以发现Python的安装目录中多了一个Scripts文件夹，把这个文件夹加入PATH路径中。</p>
+<p>安装好之后，我们发现Scripts文件夹中只有easy_install，而没有pip。而我用pip更习惯。并且easy_install 安装包时也有访问不了pypi源的问题。</p>
+<p><code>easy_install --help</code>一下，可以看到有一个-i (–index-url)的选项，这就是指定pypi源的地方了。使用豆瓣的源试一下<br><code>easy_install pip -i http://pypi.douban.com/simple</code> 安装成功，并且速度很快。</p>
+<p>然后pip也可以这样安装各种Python库了，比如</p>
+<p><code>pip install flask -i http://pypi.douban.com/simple</code></p>
+<p>但是每次这么指定比较麻烦，可以在%HOME%目录下创建一个.pip的目录，里面创建一个pip.conf的文件，里面假如以下内容：</p>
+<pre><code>[global]
+index-url = http://pypi.douban.com/simple/
+</code></pre><p>接下来就可以直接pip install 库名称 或者依然 <code>pip install 库名称 -i http://pypi.douban.com/simple</code> 来安装Python库了</p>
+<p>另外，github上可以找到一个shadowsocks的工具，原本是Python实现的，不过后来有了很多其他语言的实现比如golang, nodejs等。这个工具可以使用加密的方式访问国外局域网，避免我们的信息暴露出去，并且也可以访问一下原本国外速度很慢的网站</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-XML文档安全查询的几种方法概述" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/12/21/XML文档安全查询的几种方法概述/">XML文档安全查询的几种方法概述</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/12/21/XML文档安全查询的几种方法概述/" class="article-date">
+  <time datetime="2013-12-20T16:20:26.000Z" itemprop="datePublished">2013-12-21</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>最简单的就是根据安全策略对结果的XML文档逐个节点遍历，返回有权限查询的结果</p>
+<p><strong> 另外两种方法 </strong>，</p>
+<ul>
+<li><p>方法一：<br>  一种是类似数据库的视图方式，首先根据实际数据XML文档或者初始化时定义好XML文档的完整结构，就像定义数据库的物理表一样。对于数据XML文档，可以定义一趟DTD对节点进行约束，比如声明资源名称，权限约束，也可以不这样使用，直接根据现有的XML文档定义下文说的安全策略。对这个数据源XML结构，生成DTD格式或者自定义格式，相当于RDBMS系统中的物理表的结构，也称作物理表。<br>  然后使用XPATH或者类似CSS Selector的语法定义安全策略，语法规则可能很多条，可能可以根据相互之间的优先级构造一棵树。然后可以根据安全策略中的每个角色（以RBAC,Role Based Access Control模型为例），结合物理表的结构，生成一个视图DTD或者自定义格式，类似于RDBMS中的视图，称作角色视图表。<br>  在用户查询时，假设是用XPATH查询，或者用户角色或权限后，和上文的角色视图表结合，生成一个临时的视图DTD或者自定义结构，类似于RDBMS中的临时表结构，称作结果视图表。<br>  最后使用这个结果视图表从数据源中查询数据并返回。</p>
+</li>
+<li><p>方法二：<br>  这种方法是在定义安全策略或安全规则后，针对用户查询的XPATH，结合用户的权限和对应的安全规则，重新构造这个查询XPATH，然后使用新的XPATH向数据源查询数据并返回。这种方法同样需要上文中的构造物理表和定义安全规则的步骤。</p>
+</li>
+</ul>
+<p>两种方法孰优孰劣不具体实现也不好说，具体实现也可能会有各种问题，暂时不管。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Mac清理本地备份以清理硬盘空间" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/12/21/Mac清理本地备份以清理硬盘空间/">Mac清理本地备份以清理硬盘空间</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/12/21/Mac清理本地备份以清理硬盘空间/" class="article-date">
+  <time datetime="2013-12-20T16:11:53.000Z" itemprop="datePublished">2013-12-21</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>mac os x有个很贴心的功能，Time Machine，功能很强大，使用很方便。我一向是外接一个移动硬盘，在连接的时候自动备份的。同时Mac OS X除了外部硬盘自动备份，本地也会同时建立快照，虽然在硬盘空间不够时会自动合并多个日期的备份成一周，一月的，但有时候看到关于本机中备份占了那么大空间还是不爽啊，特别是对本人Macbook Air只有128G空间。所以网上搜了下方法。</p>
+<p>找到的最简单的方法就是先关闭本地快照，然后再重新启用（或者干脆就一直关掉了）</p>
+<pre><code>sudo tmutil disablelocal 禁用本地快照，同时本地快照会被清空
+sudo tmutil enablelocal重新启用本地快照
+</code></pre>
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-浅谈尾递归的定义和判定方法" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/12/21/浅谈尾递归的定义和判定方法/">浅谈尾递归的定义和判定方法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/12/21/浅谈尾递归的定义和判定方法/" class="article-date">
+  <time datetime="2013-12-20T16:00:00.000Z" itemprop="datePublished">2013-12-21</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>今天周六，还赖在床上时，突然想到了尾递归，虽然尾递归见得多了，也大概知道尾递归的优化原理，但是具体的定义感觉还是不太清晰，于是躺在床上想了下，自己给尾递归下了一个定义,将来有空给出数学上的证明和实现方法。</p>
+<p>首先给出尾递归的几种形式，方便下文描述（为方便书写，使用python伪代码，虽然python没有实现尾递归）</p>
+<p>然后为了简化逻辑，首先假设编程语言只有函数，函数调用和结构体，其他的类，接口，方法都可以等价于函数或结构体，且所有函数都有返回值，现代编程语言中常见的void也算是一种特殊的返回值</p>
+<p>第一种是最常见的函数尾递归调用自身：</p>
+<pre><code>def fact(n, acc=1):
+
+if n &lt;= 1:
+      return acc
+else:
+      return fact(n-1, acc*n)
+</code></pre><p>另一种是几个函数相互尾递归调用：</p>
+<pre><code>n = 0
+
+def recur1(acc=1):
+  if n % 2 == 0
+    return recur2(acc)
+  else if n &lt; 1000:
+    return recur1(acc+1)
+  else:
+    return acc
+
+def recur2(acc=1):
+  if n % 2 == 0:
+    return recur2(acc+2)
+  else:
+    return recur1(acc)
+</code></pre><p>再给一个非尾递归的例子做对比：</p>
+<pre><code>n = 0
+
+def recur1(acc=1):
+  if n % 2 == 0
+    return recur2(acc)+1
+  else if n &lt; 1000:
+    return recur1(acc+1)
+  else:
+    return acc
+
+
+def recur2(acc=1):
+  if n % 2 == 0:
+    return recur2(acc+2)
+  else:
+    return recur1(acc)+2
+</code></pre><p>上面只是随手写的例子，姑且不要看它们是否有实际意义，只看尾递归。</p>
+<p>因为尾递归优化的原理是把原本的一层层很多次函数调用以及函数调用栈空间导致栈空间大量膨胀，优化成可以在尾递归调用时不重复分配更多栈空间的形式，或者直白点，把尾递归优化成循环，把汇编级的call指令优化成jmp</p>
+<p>如上面代码可以很简单地看出，demo1和demo2都是尾递归，因为return的内容不是基本数值（或者变量，常量，都统一称作基本数值），就是调用自身，或者两个函数尾部互相调用。</p>
+<p>为了简化逻辑，定义：所有基本数值或者常量，变量，都是“<strong>在任意函数集中可尾递归的</strong>”</p>
+<p>同样，给所有函数都加上一个标签（这个标签在本次编译活动中可见，原因见下文），分别表示“<strong>在函数集合C中可尾递归的</strong>”（简单称作“<strong>可尾递归的</strong>”），“<strong>在函数集合C中不可尾递归的</strong>”（为什么这么说下文会说原因），“<strong>在函数集合C中依赖XX,XX函数集合可尾递归的</strong>”（这个标签表示这个函数依赖一个函数集合，如果这个函数集合内所有函数都是“可尾递归的”，则这个函数本身也是“可尾递归的”）</p>
+<p>然后可以归纳出一个简单的定义，</p>
+<p><strong> 定义1： </strong></p>
+<pre><code>对于一个函数集合C1,如果其中的所有函数都是“可尾递归的”，或者是“依赖函数集合C1的子集可尾递归的”，则这个函数集合C1和其中所有函数都是“可尾递归的”，否则就是“在函数集合C1中不可尾递归”。
+
+然后给出获得函数的尾递归依赖函数集（依赖这个函数集合以成为可尾递归的）的定义：
+</code></pre><p><strong> 定义2：</strong></p>
+<pre><code>    在函数集C中，对任意函数Func，获得它的函数体的所有最后可能执行的函数调用或者基本数值（或者是所有return语句后面的内容），得到一个函数集S0，将函数集S0分为函数集C中可尾递归的函数集S1，函数集C中不可尾递归的函数集S2，函数集C中依赖某函数集可尾递归的函数集S3。
+    如果函数集S2不为空，则函数Func在函数集C中不可尾递归，停止后面步骤。
+    然后，函数Func的尾递归依赖函数集就是S3中每个函数的尾递归依赖函数集的并集的结果再并上S1.得到的结果S就是函数Func在函数集C中的尾递归依赖函数集(尾递归依赖函数集不包括函数Func本身）。
+另外，基本数值或常量或变量作为“可尾递归的”，它们的尾递归依赖集是空集。
+</code></pre><p>有了这两个定义，可以得到<strong>尾递归的判定方法</strong>：</p>
+<p>在一次编译活动中，要判断函数F是否是尾递归的，按以下步骤操作：</p>
+<ul>
+<li>如果本次判断被要求在某个函数集上进行，则把这个函数集称作C，否则初始化一个空集C，</li>
+<li>把F0加入函数集C</li>
+<li>根据定义2找到函数F的尾递归依赖函数集C1，如果得出函数F是不可尾递归的，则判定结束，函数F是不可尾递归的，整个函数集C也是不可尾递归的</li>
+<li>将第三步的函数集C1并入函数集C得到新函数集C</li>
+<li>得到结果，函数集C内的所有函数在函数集C内是可尾递归的</li>
+</ul>
+<p>根据上面定义，对demo2的代码进行分析，</p>
+<ul>
+<li>初始化集合C为空集，在函数集C上从函数recur1开始进行分析（此时C={recur1}）</li>
+<li>首先找到函数recur1的尾递归依赖函数集C1={ recur2, acc }，</li>
+<li>然后C1中acc是变量，是在函数集C中可尾递归的，</li>
+<li>函数recur2的尾递归依赖集是C2={recur1}，把C2并入C1，此时C1={recur2, acc}(因为C1是recur1的尾递归依赖函数集，不包括recur1自身)</li>
+<li>然后，把C1并入C，得到C={recur1, recur2, acc}</li>
+<li>所以recur1, recur2在函数集C={recur1, recur2, acc}中是可尾递归的，判定完毕。</li>
+</ul>
+<p>再对demo3的代码进行同样的分析，得到recur1, recur2的函数依赖集C={recur1, recur2, acc, + }<br>这个时候怎么判断recur1和recur2在函数C中是不是可尾递归的呢？这个函数+怎么处理呢？我们无法知道函数 + 在函数集C中是否是尾递归的。</p>
+<p>因为尾递归优化是在某一次编译活动中进行的，对这次编译活动中所有的源代码的编译结果进行控制，而对已经编译好的函数库无法控制无法修改，也就没有办法对已经编译的函数库进行尾递归优化的修改，所以已编译的函数库对之后的编译活动都是不可尾递归的，比如函数+，这也是我上文多次提到函数集合和可尾递归的标签是在一次编译活动中的原因。</p>
+<p>如果函数+是已经存在的已经编译好的函数库或者语言内置函数，则它当然在函数集C中不可尾递归，因为它已经无法修改的，所以demo3是不可尾递归优化的。<br>而如果函数+是用户定义的源码，在本次编译中一起编译，且它的源码的尾递归依赖集也全部可以归入到函数集C中，则demo3在这种情况下是可以尾递归优化的，当然这中情况不太可能哈。</p>
+<p>到这里，尾递归的定义和判定方法应该说得很清楚了，当然，这只是我躺床上想出来的，如果有错漏，欢迎指正。</p>
+<p>严格的数学证明和尾递归的代码实现的方法有空再写，现在起床吃饭去。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-JavaScript的事件机制和执行队列的一个小验证" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/12/20/JavaScript的事件机制和执行队列的一个小验证/">JavaScript的事件机制和执行队列的一个小验证</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/12/20/JavaScript的事件机制和执行队列的一个小验证/" class="article-date">
+  <time datetime="2013-12-19T16:00:00.000Z" itemprop="datePublished">2013-12-20</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>今天突然想到，javascript的事件机制就是在事件发生后将事件的毁掉函数添加到代码的执行队列后面去，本身是单线程的。然后想到，同一个代码块的代码是一次性添加到执行队列中的，所以只要是定义回调之后的普通代码（非回调），都肯定在之前那个回调函数之前执行，无论这个回调函数对应的事件发生得多快，哪怕立刻发送，间隔时间为0，也肯定在定义这个回调的代码块的后续代码之后执行，因为那段代码块在之前已经被添加到执行队列中了。</p>
+<p>间隔时间为0的回调很简单，setTimeout(function(){…}, 0)就可以了</p>
+<p>为了验证这个猜测，我写了两段简单的JS代码试验了一下。</p>
+<p>代码片段1：</p>
+<pre><code>var state = null;
+
+function test() {
+    // console.log(&apos;a1&apos;);
+    if(!state || state===&apos;a3&apos;) {
+        state=&apos;a1&apos;;
+    } else {
+        throw new Error(state);
+    }
+    setTimeout(function() {
+        // console.log(&apos;a3&apos;);
+        if(state === &apos;a2&apos;) {
+            state = &apos;a3&apos;;
+        } else {
+            throw new Error(state);
+        }
+    }, 0);
+
+    if(state ===&apos;a1&apos;) {
+        state = &apos;a2&apos;;
+    } else {
+        throw new Error(state);
+    }
+    // console.log(&apos;a2&apos;);
+}
+
+test()
+</code></pre><p>这段代码不报错，符合上面的说法</p>
+<p>代码片段2（上面函数执行1000次）</p>
+<pre><code>var state = null;
+
+function test() {
+    // console.log(&apos;a1&apos;);
+    if(!state || state===&apos;a3&apos;) {
+        state=&apos;a1&apos;;
+    } else {
+        throw new Error(state);
+    }
+
+    setTimeout(function() {
+        // console.log(&apos;a3&apos;);
+        if(state === &apos;a2&apos;) {
+            state = &apos;a3&apos;;
+        } else {
+            throw new Error(state);
+        }
+    }, 0);
+
+    if(state ===&apos;a1&apos;) {
+        state = &apos;a2&apos;;
+    } else {
+        throw new Error(state);
+    }
+
+    // console.log(&apos;a2&apos;);
+}
+
+console.log(&apos;start test&apos;);
+
+for(var i=0;i&lt;1000;++i) {
+    console.log(&quot;loop &quot;, i);
+    test();
+}
+
+console.log(&apos;end test&apos;);
+</code></pre><p>因为整个for循环都是同一个代码段，在任何一次回调发生之前都被加载到执行队列中，所以setTimeout的任何一次回调都发生在1000次test函数执行之后。也就是全部1000次test函数执行完之前都不会执行任何一次setTimeout回调。然后在state变化时，第二次循环就应循环最开始变成a1状态时就应该报错error a2. 执行结果和预测完全符合。</p>
+<p>这只是突然想到的一个简单的验证，也在吃证明了javascript是一个语言模型方面非常简单的语言，除了坑太多。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-关于大数的乘法" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/11/29/关于大数的乘法/">关于大数的乘法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/11/29/关于大数的乘法/" class="article-date">
+  <time datetime="2013-11-28T16:09:56.000Z" itemprop="datePublished">2013-11-29</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>关于计算两个非常大的数字的乘法（求解大数的n次方，浮点数的高精度的乘法或幂都可以归类到这个问题）的方法，经常可以见到。今天我又一次看到这道题，所以这里就将我想到的方法记录下来，以备将来使用。</p>
+<p>首先，回顾一下常见的普通大小的整数乘法，我们人肉计算是竖式计算的方式，这种方式也可以看做将两个乘数都分成一位位的，然后分别相乘计算，也就是</p>
+<pre><code>x = abcdef
+y = mnpqrs
+x * y = (abcdef) * (mnpqrs)
+      = （a*10^5+b*10^4+...+f） * (m*10^5+n*10^4+...+s)
+      = ....(这一步就是竖式的一位位的计算)
+</code></pre><p>然后我们再来想想大数于普通int型数的不同是什么？</p>
+<p>以下表示大数的方法简单的以10进制字符串的形式表示和存储，其他存储方式可能也可以。（比如2进制可能更合适，但十进制在手写时比较直观）</p>
+<p>如果大数以0结尾，可以先分解成x*10^k，用x计算后，尾部加上k个0即可。以下会有一些乘以10^k的地方，使用这种方法计算就可以很简单的实现。</p>
+<p>int 型的计算是分成长度个1位数*10^k的和，然后拆开计算求和。int型整数(32bit)之所以方便被计算机计算的原因就是分成的位数(10进制，最多10位）足够小，在内存中方便直接存储。反过来也就是大数（比如一个长100的10进制整数）如果按一位位的10进制基本单元来算的话，分成的单元个数太多，不好直接计算。</p>
+<p>那怎么解决这个问题呢？很简单，不要一位位的分，而是一个单元许多位的分，或者不要按10进制计算，按一亿进制计算（举例）</p>
+<p>本篇文章暂时只考虑第一种方法，即将一个大数x分成若干个单元，每个单元有若干位，使得分成的单元个数足够小到方便计算机计算。</p>
+<p>为简单起见，假设每次分成2个单元，尽量均分，即将10进制显示的字符串长度为n的大数x分成前一半长度[n/2]位的数a*10^(n-[n/2])和后一半长度(n-[n/2])位的数b。</p>
+<p>也就是</p>
+<pre><code>x = a*10^(n-[n/2]) + b
+</code></pre><p>a 和 b的长度都是x的一半左右（如果x的长度足够小，比如小于10，在int范围内，则a = 0, x = b）</p>
+<p>另一个乘数是长度m的大数y,可以同样分解成 y = c*10^(m-[m/2]) + d</p>
+<p>然后 x * y 就可以分解成几个长度差不多缩小一半的数（或大数）的乘积的和了。</p>
+<p>如果分解出的单元的乘法依然是大数乘法，用同样方法递归到长度足够小为止即可。</p>
+<p>接下来只剩下一个问题了，就是上面计算了分解单元的大数和后，还要将他们加起来，这就是大数求和问题了。</p>
+<p>大数求和这个问题很简单，只要把大数x按10进制位的int/short的数组形式存储，数组长度就是大数的10进制字符串的长度即可。大数相加只要将两个数组逐位相加并考虑进位即可，（负数，大数相减的问题差不多，使用同样方式）。</p>
+<p>至此，大数相乘的问题就解决了。</p>
+<p>关于代码实现，之后会加上。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-怎样让windows命令行程序在后台启动" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/11/29/怎样让windows命令行程序在后台启动/">怎样让windows命令行程序在后台启动</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/11/29/怎样让windows命令行程序在后台启动/" class="article-date">
+  <time datetime="2013-11-28T16:00:00.000Z" itemprop="datePublished">2013-11-29</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>因为有几个项目使用到redis，并且我是在windows下开发的，每次打开redis-server.exe之后一个黑色的命令行窗口放在那挺碍眼的，而且占着任务栏的位置也不方便，经常会点错。所以就想让它作为后台程序运行。不需要开机启动启动，因为我整月不关机很正常。</p>
+<p>在Linux下实现这个目标很容易，只要在启动时程序路径后加上一个&amp;符号即可。 但是Windows下的命令行可没有Linux下这么强大，我网上搜了下，找到一个经验证有效的方法。</p>
+<p>以下都以上面提到的redis为例。</p>
+<p>首先建立一个.bat的批处理文件，任意起名，比如run-redis.vbs。 这个脚本随便放哪，不过为了方便查找已经避免写绝对路径，建议放到目标程序的同一个目录下。</p>
+<p>编辑其中内容为：</p>
+<pre><code>set ws = WScript.CreateObject(&quot;WScript.Shell&quot;)
+ws.Run &quot;redis-server.exe&quot;, 0
+</code></pre><p>其中ws.Run 后的字符串内容是要后台运行的程序的路径，这时候前面放到目标程序的同一目录下的好处就显露出来了，这样可以直接写相对路径，直接就是程序名。 </p>
+<p>要运行程序，只要双击这个.vbs脚本就可以运行了。在任务管理器中也可以看到redis-server.exe正在运行中。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-关于JavaScript的内存泄露检测" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/11/20/关于JavaScript的内存泄露检测/">关于JavaScript的内存泄露检测</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/11/20/关于JavaScript的内存泄露检测/" class="article-date">
+  <time datetime="2013-11-19T16:00:00.000Z" itemprop="datePublished">2013-11-20</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>今天我遇到一个浏览器crash的问题，怀疑可能是JavaScript内存泄露了。然后网上搜了下，找到了Chrome中调试JavaScript内存泄露的方法</p>
+<p>先打开Chrome开发者工具。以打开一个标签页为例。打开然后关闭此标签页一次，确保此标签页需要的资源都加载过了。然后进入开发者工具的Profiles标签页，选择Take Heap Snapshot，并Start。然后浏览器就会记录下当前页面的JavaScript所有对象的快照。然后再次打开关闭上述标签页，然后重复捕获JavaScript对象快照一次.此时可以看到如下图：</p>
+<p><img src="http://zoowiistore.qiniudn.com/zoowii.github.io_blog.20131025-0001.png" alt></p>
+<p>注意到最下面有个Summary，选择Comparison，就可以看到Snapshots的增量变化了。内存泄露注意看Constructor中的closue的数量变化和内容就好，看看有多少对象没有释放，以及对应的代码。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-使用jdbc向MySQL数据库插入大量数据" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/11/18/使用jdbc向MySQL数据库插入大量数据/">使用jdbc向MySQL数据库插入大量数据</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/11/18/使用jdbc向MySQL数据库插入大量数据/" class="article-date">
+  <time datetime="2013-11-17T16:00:00.000Z" itemprop="datePublished">2013-11-18</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>今天碰到一个问题，要将一个500*50000=25000000的excel表放入数据库进行分析，采用了mysql数据库。为了避免一个表有太多字段，所以拆成了竖轴A，横轴B，AB对应以及对应的值的表C，这样在C表中大概就有25000000条记录。在使用Java/Groovy向mysql数据库插入这些数据的过程中碰到了一些问题。<br>java/groovy程序泡在2013 macbook air 13寸低配版+8G上。jvm的最大堆内存和初始堆内存都设置到512M以上,jdk 版本1.7，groovy 2.1<br>mysql使用官方版本，使用开发型配置，没有做其他任何优化或相关设置。</p>
+<p>mysql在远程服务器上，服务器配置不高，但带宽是10M。</p>
+<p>A, B, C表没有建立多余索引，只有主键和not null等基本约束，这是为了避免有索引对插入的影响。</p>
+<p>首先，为了简单，将excel表另存为csv格式再由groovy读取，这也是因为数据可是很简单。</p>
+<p>其次，最开始我是每次从CSV中读取一行，然后把这一行的500个数据插入C表中。这个时候，虽然使用了PrepareStatement 的addBatch, executeBatch功能，但是结果发现性能还是非常糟糕，一分钟1万条可能都没有，这个性能太糟糕了，我这还只是一个demo的数据而已。</p>
+<p>然后网上搜了一下，发现好像是jdbc的mysql驱动默认是批处理无效的，需要在连接字符串上加上rewriteBatchedStatements=true 变成类似”jdbc:mysql://${host}:$port/$dbName?rewriteBatchedStatements=true”的样子。试了一下，果然速度提高了10倍不止，不明觉厉。</p>
+<p>虽然速度提高很多，还是不够满意，不过目前也没什么其他好方法，目前这速度也可以完成任务，就先这么处理。</p>
+<p>网上还看到使用mysqldump可以达到非常快的速度，有时间可以试一下。</p>
+<p>发此文仅作记录分享，更深入的原因和处理方式有时间研究。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-About-Http-Payload" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2013/11/12/About-Http-Payload/">About-Http-Payload</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/11/12/About-Http-Payload/" class="article-date">
+  <time datetime="2013-11-11T16:00:00.000Z" itemprop="datePublished">2013-11-12</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>最近看了下REST协议，然后试验了下，发现Rest发出的POST请求的内容是存放在Http请求的Request Payload里的，而不是像平常在form, jquery post中是存放在post data里的。如果要读取这个Payload的内容，可以把request对象的输入流的内容（正文部分）读出，根据需要转成JSON/XML或其他需要的格式。</p>
+<p>网上查了下资料，之所以会有这样的问题，是因为RESST协议规范了Content-Type，服务器端会（或者说应该）根据Content-Type的内容做相应的处理，比如如果Content-Type是text/xml; charset=utf8或者是text/json或application/json等等，就分别做xml/json处理。</p>
+<p>可是平常的form表单的Content-Type是application/x-www-form-urlencoded或者multipart上传文件的。参数是经过urlencoded成类似name=zoowii&amp;age=21的形式，而jquery的ajax请求已经帮我们做了设置Content-Type和urlencode参数的工作。Content-Type=application/x-www-form-urlencoded的参数内容是放在request body中的，也就是我们平常用的请求，一般服务器端可以直接从request中读出这个request body的内容。</p>
+<p>要解决这个方法也简单，只要写一个实用函数可以根据Content-Type类型预处理HttpRequest并将request payload预处理和解码就好了。</p>
+<p>另外，REST确实是一个很方便的协议。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+  
+    <nav id="page-nav">
+      <a class="extend prev" rel="prev" href="/page/2/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/">Next &raquo;</a>
+    </nav>
+  
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

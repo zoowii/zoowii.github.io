@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="专业闭关三十年">
+<meta property="og:url" content="http://zoowii.com/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:locale" content="default">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="专业闭关三十年">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-levelsql-design" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/02/25/levelsql-design/">一个关系数据库LevelSQL的设计和实现</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/02/25/levelsql-design/" class="article-date">
+  <time datetime="2020-02-25T12:52:12.000Z" itemprop="datePublished">2020-02-25</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>前些天过年疫情在家时为了学习和复习数据库知识，实现了一个兼容MySQL的关系数据库LevelSQL，存储层可以基于磁盘文件或者LevelDB或者对象存储OSS或者Redis等中.</p>
+<h1 id="主要特性有"><a href="#主要特性有" class="headerlink" title="主要特性有:"></a>主要特性有:</h1><ul>
+<li>一个查询计算引擎(SQL和执行计划等)</li>
+<li>从存储引擎中分离出来的索引（目前索引只支持B+树）</li>
+<li>统一的存储层接口以及基于磁盘文件或者LevelDB或者OSS或者Redis等的具体实现</li>
+<li>支持MySQL网络协议(可以使用现有MySQL客户端和驱动使用)</li>
+</ul>
+<h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><ul>
+<li><a href="https://github.com/zoowii/levelsql" target="_blank" rel="noopener">https://github.com/zoowii/levelsql</a></li>
+</ul>
+<h1 id="本文主要讲下大概设计和结构"><a href="#本文主要讲下大概设计和结构" class="headerlink" title="本文主要讲下大概设计和结构"></a>本文主要讲下大概设计和结构</h1><p>为了支持未来支持分布式架构，所以一开始就把查询引擎和存储引擎剥离，但是没有像TiDB那样直接用LSM同时做存储和索引，而是做成存储引擎和索引也分开来，通过固定接口使用和传递数据。计算引擎，索引，存储引擎分离的优势是未来存储引擎做成分布式存储，查询引擎使用无状态计算引擎，索引层做到基于存储引擎之上的应用层本身无状态或者伪无状态，则可以比较容易实现分布式数据库，通过简单给计算层或者存储层增加机器扩容</p>
+<p>在这个考虑上，代码架构上主要组件如下</p>
+<h1 id="主要组件"><a href="#主要组件" class="headerlink" title="主要组件"></a>主要组件</h1><ul>
+<li>存储引擎<ul>
+<li>存储引擎接口</li>
+<li>存储引擎实现</li>
+</ul>
+</li>
+<li>索引</li>
+<li>查询引擎 <ul>
+<li>SQL解析</li>
+<li>执行计划生成</li>
+<li>执行计划优化</li>
+<li>计划执行器</li>
+</ul>
+</li>
+<li>MySQL网络协议</li>
+</ul>
+<h1 id="请求处理流程"><a href="#请求处理流程" class="headerlink" title="请求处理流程"></a>请求处理流程</h1><p>以insert插入语句和select查询语句为例进行说明</p>
+<h2 id="select语句"><a href="#select语句" class="headerlink" title="select语句"></a>select语句</h2><p>server端通过MySQL网络协议接收到SQL语句后，先SQL解析器把SQL语句转换成抽象语法树AST，然后通过visitor模式把SQL AST转换成初始的执行计划树，执行计划树是一个由若干执行计划算子构成的树状结构，比如</p>
+<figure class="highlight n1ql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="built_in">sum</span>(employee.age)</span><br><span class="line"><span class="keyword">from</span> employee <span class="keyword">join</span> country <span class="keyword">on</span> employee.country_id = country.id </span><br><span class="line"><span class="keyword">where</span> age &gt; <span class="number">18</span></span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> age <span class="keyword">asc</span> </span><br><span class="line"><span class="keyword">limit</span> <span class="number">10</span></span><br></pre></td></tr></table></figure>
+<p>构造出来的逻辑执行计划树大致如下(火山模型下resultSet.next轻轻从上往下,查询结果数据流从下往上返回)</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">                     aggregate(<span class="built_in">sum</span>(age))</span><br><span class="line">                             |<span class="type"></span></span><br><span class="line"><span class="type">                        projection</span>(从输入中选择employee.age列)</span><br><span class="line">                             |<span class="type"></span></span><br><span class="line"><span class="type">                           limit</span></span><br><span class="line">                             |<span class="type"></span></span><br><span class="line"><span class="type">                          order</span> <span class="built_in">by</span> (employee.age asc)</span><br><span class="line">                             |<span class="type"></span></span><br><span class="line"><span class="type">                          group</span> <span class="built_in">by</span> (无)</span><br><span class="line">                             |<span class="type"></span></span><br><span class="line"><span class="type">                           filter</span>(age &gt; <span class="number">18</span>)</span><br><span class="line">                             |<span class="type"></span></span><br><span class="line"><span class="type">                            join</span></span><br><span class="line">                       |              <span class="type">|</span></span><br><span class="line"><span class="type">scan</span> table employee/index             scan table country/index</span><br></pre></td></tr></table></figure>
+<p>逻辑执行计划生成后可以根据需要进行优化，比如使用索引或者联合索引，部分不需要的操作可以不做，不需要的列可以不输出给上层，提前做一些表达式计算等</p>
+<p>执行计划生成并优化后，交给计划执行器进行执行，LevelSQL中的计划执行器的实现方式是一个执行计划树启动后，把各算子都作为单独任务交给一个线程池执行，各算子从自己的任务队列中循环检查有没有收到新的FetchTask任务，有收到就执行自身逻辑，向children算子发送子任务，把子任务和处理结果作为自身的任务的一次结果.执行器在顶层算子输出sourceEnd结果或者error或者超时时结束本次计划的执行并把结果输出.</p>
+<p>FetchTask是一个可能有三种结果(部分数据, 执行结束sourceEnd, 错误)的future类.</p>
+<h2 id="insert语句"><a href="#insert语句" class="headerlink" title="insert语句"></a>insert语句</h2><p>收到insert SQL语句后，会找到对应表的所有索引，并分别向聚集索引和二级索引（包括联合索引）分别构造key和数据插入索引中，索引收到插入请求后调用存储引擎的接口把数据写入存储层</p>
+<h1 id="存储引擎接口和实现"><a href="#存储引擎接口和实现" class="headerlink" title="存储引擎接口和实现"></a>存储引擎接口和实现</h1><p>存储引擎的接口比较简单，因为目前还没加入事务的实现，所以存储引擎接口目前设计为一个类Key-Value的API接口供上层调用.</p>
+<p>和普通KV接口区别是Key不是单个字符串或者字节数组，而是一个包含(命名空间 namespace: String, 序号 seq: Int)的元祖，value是普通的字节数组.</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** namespace是区分不同命名空间的区分词，比如不同索引，不同表有不同的namespace</span></span><br><span class="line"><span class="comment"> * seq是一个顺序增加的整数，一般每次只增加1(或者比较少的数量不要求必须递增1)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">data</span> <span class="class"><span class="keyword">class</span> <span class="title">StoreKey</span></span>(<span class="keyword">val</span> namespace: String, <span class="keyword">val</span> seq: <span class="built_in">Long</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">interface</span> <span class="title">IStore</span> </span>&#123;</span><br><span class="line">     <span class="function"><span class="keyword">fun</span> <span class="title">put</span><span class="params">(key: <span class="type">StoreKey</span>, value: <span class="type">ByteArray</span>)</span></span> <span class="comment">// 需要在新增数据调用时key.seq逐渐增加</span></span><br><span class="line">     <span class="function"><span class="keyword">fun</span> <span class="title">get</span><span class="params">(key: <span class="type">StoreKey</span>)</span></span>: ByteArray?</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>之所以要求 key.seq顺序增加是为了索引层增加新页时key.seq可以比较简单的用新页的编号等提供，存储引擎实现时新增数据有更大序号也更容易实现(最简单的比如磁盘文件则可以简单的追加数据)</p>
+<p>具体到实现这个接口的方式上，比如磁盘文件mmap到内存后，各namespace有不同文件，每个文件根据seq转换成所在块的偏移量直接写入即可. 如果用LevelDB/Redis实现，则可以把key整体序列化成字节数组或者字符串去作为键值插入.</p>
+<h1 id="查询引擎的设计"><a href="#查询引擎的设计" class="headerlink" title="查询引擎的设计"></a>查询引擎的设计</h1><p>执行计划目前使用的火山模型，本文中select语句的执行流程中已经有一个很简单的说明，具体实现另外文章详细再写.</p>
+<h1 id="SQL解析"><a href="#SQL解析" class="headerlink" title="SQL解析"></a>SQL解析</h1><p>因为SQL语法的简单性，所以没用lex/yacc等工具生成parser，直接基于一边遍历+lookahead的方式手写了个SQL Parser。具体可以看代码中com.zoowii.levelsql.sql.parser包下的代码</p>
+<h1 id="MySQL网络协议"><a href="#MySQL网络协议" class="headerlink" title="MySQL网络协议"></a>MySQL网络协议</h1><p>MySQL网络协议是一个基于TCP上的应用层协议，客户端和服务端发送的命令和返回都是组织成packet的方式发送, packet中有序号和command type等信息。简单介绍下TCP连接建立后的mysql会话建立阶段(connection phase)和会话建立后的命令阶段(command phase).</p>
+<figure class="highlight axapta"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="number">1.</span> TCP连接建立，开始mysql会话建立截断</span><br><span class="line"><span class="number">2.</span> mysql <span class="keyword">server</span>给<span class="keyword">client</span>发送一个handshake packet</span><br><span class="line"><span class="number">3.</span> mysql <span class="keyword">client</span>根据收到的handshake packet中信息构造包含authentication等信息的handshake response packet给<span class="keyword">server</span>端</span><br><span class="line"><span class="number">4.</span> mysql <span class="keyword">server</span>接受到handshake response packet后检查包中的信息，验证成功就发送err packet给客户端并结束连接，否则发送ok packet给客户端然后进入命令阶段</span><br><span class="line"><span class="number">5.</span> mysql <span class="keyword">client</span>在收到ok packet进入命令阶段后，发送命令给mysql <span class="keyword">server</span>，比如init db packet, query packet等</span><br><span class="line"><span class="number">6.</span> 以mysql <span class="keyword">client</span>发送query packet为例，<span class="keyword">server</span>端从query packet中解析得到SQL语句，并执行，得到结果后发送若干个packets给客户端完成这次查询(之所以返回多个包是因为返回结果的列数，headers的内容, 结束headers部分，返回结果的行数，各行数据，结束eof packet等都分别是一个单独的packet)</span><br></pre></td></tr></table></figure>
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-bts-smartcoin" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/06/25/bts-smartcoin/">bts2.0的智能资产(smartcoin)的机制</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/06/25/bts-smartcoin/" class="article-date">
+  <time datetime="2017-06-24T17:33:04.000Z" itemprop="datePublished">2017-06-25</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>bts2.0中的智能资产(smartcoin)可以实现类似bitUSD,bitCNY这类和外界法币相对锚定的功能，主要实现机制是抵押+强制清算提供外部市场消除价差的动力。</p>
+<p>bts 2.0的smartcoin。先创建好一种smartcoin，比如bitCNY，外部进行喂价 , 然后任何用户都可以通过抵押bts（比如超过1.75倍的bts)铸币这种智能资产，可以类比bts2.0系统为去中心化的央行，铸币相当于资产负债表扩表，资产（抵押的bts)和负债（发行的bitcny)同时扩张。用户抵押bts铸币，相当于开了一个bitCNY的空单。</p>
+<p>bitcny 发行后，相当于一个有面值的债券，面值就是喂价的价格，任意用户可以任意时间强制清算bitcny，兑换成面值的bts，清算中，系统会按bitcny的所有空单中，从抵押率最低的空单还是强制清算，同时减少空单的bitcny负债和减少抵押品Bts。减少的抵押品bts交给清算bitcny的用户，清算是延后24小时并以24小时后的喂价自动执行无法取消的。  </p>
+<p>这个清算的过程就是bts系统的资产负债表缩表的过程。整个系统的bitcny的资产端（抵押品bts）和负债端（bitcny)同时缩小。因为有这个强制清算的过程，所以bitcny的价格会相对锚定在市场价格，因为如果系统内bitcny相对于bts的价格低于市场价，用户因为有清算bitcny兑换回Bts的选项，就有动力去买入bitcny然后清算，这个市场过程会减少价差，如果Bitcny相当于Bts的价格高于市场价，用户就有动力在交易卖出bts换为bitcny，然后强清bitcny兑换为更多的Bts，这个市场行为也会自然减少价差。 喂价的行为由比较可信的见证人用户执行（见证人得到大量投票，喂价作假确影响他们整体收益），按照共识计算出一个值，但是空单（抵押bts铸币bitcny)是强行平仓是根据喂价决定，而不是根据bts内部市场的买卖决定，当Bts价格剧烈波动时，有可能喂价远高于实际价格导致空单爆仓。</p>
+<p>bancor链的智能资产通过多准备金资产，以及允许按照共识自由申购赎回，也提供了给外部市场消除价差的动力（有利可图），不过bancor链的主要目的还是类似ETF给小众代币提供流动性</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-dotnet-to-lua-bytecode" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/04/13/dotnet-to-lua-bytecode/">.Net字节码转换到Lua字节码的实现方式</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/04/13/dotnet-to-lua-bytecode/" class="article-date">
+  <time datetime="2017-04-12T16:03:21.000Z" itemprop="datePublished">2017-04-13</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>最近做了个将.Net的字节码文件转换成Lua5.3官方版本字节码的小项目，这样用C#, F#等编程语言编写的代码就可以运行在Lua虚拟机上和Lua互调用了（虽然这种需求不常见，不过Lua虚拟机实现简单方便定制对运行时比较可控也算一个微不足道的优势）。<br>先不管为什么会有这个奇怪的需求，考虑到将性能差的动态编程语言编译到JVM, CLR等性能好的平台的字节码比较常见，但是反过来将静态编程语言编译到性能差的动态脚本语言的虚拟机上情况比较少见，所以记录这篇文章分享一下。</p>
+<p>先简单介绍下.Net和Lua5.3的虚拟机的堆栈结构，因为这两种虚拟机的堆栈结构不一样，字节码指令也差别较大，不能简单对应转换。</p>
+<p>.Net字节码的读取可以使用Mono.Cecil库，Lua字节码生成我是写了个assembler来根据伪汇编生成Lua5.3字节码。</p>
+<p>.Net虚拟机有Evaluation Stack(指令下文简称eval stack), Call Stack, 参数区，堆，本质是一个基于堆栈的虚拟机<br>Lua5.3官方的虚拟机有Slots, 堆，本质是一个基于寄存器的虚拟机</p>
+<p>首先因为两种虚拟机的堆栈结构都不一样，.Net的字节码指令基于操作栈和内存堆还有eval stack，而Lua的字节码指令都是操作Slots，类似操作一个个寄存器（不是CPU中的寄存器概念）的，所以要实现两种字节码的转换，我采用的方式是目标Lua字节码序列需要实现模拟.Net虚拟机的堆栈结构，下文有具体描述实现方式。</p>
+<pre><code>主要实现流程：
+1. 实现.Net方法到Lua proto的映射
+2. 实现.Net操作指令到Lua指令的映射
+3. 实现.Net的控制流指令到Lua指令的映射
+4. 实现.Net的函数调用，函数参数，函数调用的返回值到Lua字节码的映射
+5. 实现.Net常用函数和类库到Lua的映射（只实现能关联到Lua中的函数和类库）
+6. .Net中提供Lua内置库的mock类，从而实现C#写代码，最终编译到Lua字节码后可以使用Lua内置库
+7. .Net中提供Lua的table类型等类型的内置库
+8. 精简生成的字节码指令，去除因为堆栈结构不一样导致的生成过程中一些无用操作（比如刚压栈就出栈）
+</code></pre><p>将.Net的一个method映射成为Lua中的一个proto，同样有maxstacksize, numOfLocalVariables, 另外有numOfUpvalues。将.Net的非基本对象（数字，布尔类型，字符串等）映射为Lua的table类型对象和proto，.Net中一个有若干方法和属性的对象，映射为Lua中的table和proto, proto中有若干个slots分别通过Lua的closure指令指向不同的其他proto(.Net类型的methods映射的结果)，.Net对象的属性放入table中。</p>
+<p>然后最关键的是实现.Net的method方法转换到Lua的proto的实现。</p>
+<p>对于.Net虚拟机中的eval stack概念，可以通过在目标Lua字节码的proto中头部固定设置一个slot，存储一个table来模拟.Net中的eval stack，另外提供几个固定slot用来存放计算时临时用的对象（比如存储eval stack长度等)</p>
+<p>对于.Net中的call stack概念，在目标Lua字节码的proto中专门开辟一段slot区域用来存储，这段slot区域的开始和结束位置，可以根据.Net中method的maxstacksize和指令操作的最大call stack loc计算出来。</p>
+<p>然后就是.Net各种指令到Lua指令的翻译了，是一个苦力活，下面简单举例说下一些指令转换的方式</p>
+<pre><code>每个proto头部先加入指令 newtable %0 0 0;  %0表示slot 0, @0表示upvalue 0, upvalue的处理有空再说
+
+以下不少翻译后指令结合起来后没必要可以去重精简掉
+
+
+.Net的IL指令(用一些基本常用指令介绍)                                                   Lua指令(简要描述)
+
+stloc 从eval stack 弹出栈顶数据复制到call stack                 len %1 %0; gettable %(callStackSlotStart+loc) %0 %1; loadnil %3 0; settable %0 %1 %3;
+ldloc 从当前函数栈的call stack把某个数据复制到eval stack         len %1 %0; add %1 %1 const 1; settable %0 %1 %(callStackSlotStart+loc)
+ldc_i4 加载4字节int常量到eval stack                             loadk %1 const ConstValue; len %2 %0; settable %0 %2 %1
+add    消耗eval stack的顶部2个值, 计算结果存入eval stack         len %1 %0; gettable %4 %0 %1; loadnil %3 0; settable %0 %1 %3; len %1 %0; gettable %5 %0 %1; settable %0 %1 %3;
+                                                                         add %2 %4 %5; len %1 %0; add %1 %1 const 1; settable %0 %1 %2
+call   调用.Net函数                                             先从eval stack取出若干参数放入slot, 然后根据具体情况判断是转换成Lua指令还是全局函数还是某个table的成员函数，
+                                                               比如getupval %2 @(被call的func的upvalueIndex) / gettabup %2 @(env的upvalueIndex) const &quot;函数名&quot; 等，
+                                                               然后call %(func slot) 参数数量+1 返回值数量+1，如果method有返回值，还需要增加把返回值存入eval stack的指令
+br     无条件跳转到目标指令                                      分为跳转到当前指令之前的指令还是之后的指令，如果是之后的指令，需要预先计算出接下来若干.net指令转换到Lua指令后的数量计算偏移量，知道便宜量后就可以在                                                                   proto整体转换完成后在对应位置插入label，本指令转换为jmp $labelName
+beq, bgt, bge, blt, ble, bne   比较两个值(eval stacktop-1和top)，满足一定条件就jmp到目标指令                  len %1 %0; gettable %arg2 %0 %1; loadnil %3 0; settable %0 %1 %3; len %1 %0; 
+                                                                 gettable %arg1 %0 %1; settable %0 %1 %3;lt 0 %arg1 %arg2; jmp 1 $labelOfNextIlInstruction; jmp 1 $targetLabel
+brtrue, brfalse 如果eval stack top值是1/0就jmp到目标指令           类似的条件跳转
+ret     结束当前函数栈并返回eval stack中的数据，需要根据当前.Net方法的返回类型是否void来判断返回数据
+newarr  创建一个空数组放入eval-stack顶                                   newtable替代
+newobj  创建一个空的未初始化对象放入eval-stack顶                          newtable替代
+dup     把eval stack栈顶元素复制一份到eval-stack顶                    len %1 %0; gettable %2 %0 %1; add %1 %1 const 1; settable %0 %1 %2
+cgt, clt, ceq   比较两个值(eval stack top-1 和 top)。如果第一个值大于第二个值(如果是Clt/Clt_Un，则是比较是否小于)，则将整数值 1 (int32) 推送到计算堆栈上；反之，将 0 (int32) 推送到计算堆栈上     这里也转换成条件跳转
+ldnull 加载null到eval stack
+ldstr  加载字符串常量到eval stack
+ldarg 从当前函数栈的参数列表中把某个参数复制到eval stack           
+等等 
+</code></pre><p>以上描述得虽然还有内容很少，但是足够实现C#的大部分语法对应的字节码转换到Lua5.3字节码了，比如类型，函数定义，函数参数，函数调用和返回值，if, for, while, break, continue, 变量赋值，比较操作符，数值操作，内置函数操作比如字符串连接和print等。以后有空再补充更多细节</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-spit-Lua" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/03/08/spit-Lua/">Lua的一些坑的记录</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/03/08/spit-Lua/" class="article-date">
+  <time datetime="2017-03-08T02:02:32.000Z" itemprop="datePublished">2017-03-08</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Lua是一门很小巧的编程语言，不过使用过程中发下一些容易出现问题的地方，这里记录一下（API正常使用不记录）。记录时使用的版本是官方Lua 5.3.4版本源码.</p>
+<ul>
+<li><p>Lua的table区分数组部分和哈希表部分，数组部分索引从1开始，而不是0-based</p>
+</li>
+<li><p>Lua的C API中的lua_isstring和lua_isnumber有点坑</p>
+</li>
+</ul>
+<figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">LUA_API int lua_isnumber (<span class="name">lua_State</span> *L, int idx) &#123;</span><br><span class="line">    lua_Number n;</span><br><span class="line">    const TValue *o = index2addr(<span class="name">L</span>, idx)<span class="comment">;</span></span><br><span class="line">    return tonumber(<span class="name">o</span>, <span class="symbol">&amp;n</span>)<span class="comment">;   // 坑，会执行转换成number类型改动栈</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">LUA_API int lua_isstring (<span class="name">lua_State</span> *L, int idx) &#123;</span><br><span class="line">    const TValue *o = index2addr(<span class="name">L</span>, idx)<span class="comment">;</span></span><br><span class="line">    // 坑，这里逻辑是看能否转换成string，之后如果调用lua_tostring会改动栈中值，在遍历table判断key的时候就悲催了</span><br><span class="line">    return (<span class="name">ttisstring</span>(<span class="name">o</span>) || cvt2str(<span class="name">o</span>))<span class="comment">;  </span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">-- 容易导致错误的使用比如</span><br><span class="line">lua_State *L = luaL_newstate();</span><br><span class="line">luaL_dostring(L, "a=&#123;&#125;;a[2]=123");</span><br><span class="line">lua_getglobal(L, "a");</span><br><span class="line"></span><br><span class="line">lua_pushnil(L);</span><br><span class="line">while(lua_next(L, -2))</span><br><span class="line">&#123;</span><br><span class="line">    auto is_string_key = lua_isstring(L, -2);</span><br><span class="line">    if (lua_isstring(L, -2))</span><br><span class="line">    &#123;</span><br><span class="line">        printf("%s=", luaL_checkstring(L, -2));</span><br><span class="line">    &#125;</span><br><span class="line">    else if(lua_isinteger(L, -2))</span><br><span class="line">    &#123;</span><br><span class="line">        printf("%d=", luaL_checkinteger(L, -2));</span><br><span class="line">    &#125;</span><br><span class="line">    printf("%d\n", luaL_checkinteger(L, -1));</span><br><span class="line">    lua_pop(L, 1);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">lua_close(L);</span><br><span class="line"></span><br><span class="line">-- 以上这段代码会进程崩溃,因为错误的对int值进行了luaL_checkstring(或lua_tostring)导致当前lua虚拟堆栈被改写，然后lua_next的时候会找不到正确的key，然后报错崩溃</span><br><span class="line">-- 而下面这样写就正常了</span><br><span class="line">lua_State *L = luaL_newstate()<span class="comment">;</span></span><br><span class="line">    </span><br><span class="line">luaL_dostring(<span class="name">L</span>, <span class="string">"a=&#123;&#125;;a[2]=123"</span>)<span class="comment">;</span></span><br><span class="line">lua_getglobal(<span class="name">L</span>, <span class="string">"a"</span>)<span class="comment">;</span></span><br><span class="line"></span><br><span class="line">lua_pushnil(<span class="name">L</span>)<span class="comment">;</span></span><br><span class="line">while(<span class="name">lua_next</span>(<span class="name">L</span>, <span class="number">-2</span>))</span><br><span class="line">&#123;</span><br><span class="line">    auto is_string_key = lua_isstring(<span class="name">L</span>, <span class="number">-2</span>)<span class="comment">;</span></span><br><span class="line">    if(<span class="name">lua_isinteger</span>(<span class="name">L</span>, <span class="number">-2</span>))</span><br><span class="line">    &#123;</span><br><span class="line">        printf(<span class="string">"%d="</span>, luaL_checkinteger(<span class="name">L</span>, <span class="number">-2</span>))<span class="comment">;</span></span><br><span class="line">    &#125; </span><br><span class="line">    else if (<span class="name">lua_isstring</span>(<span class="name">L</span>, <span class="number">-2</span>))</span><br><span class="line">    &#123;</span><br><span class="line">        printf(<span class="string">"%s="</span>, luaL_checkstring(<span class="name">L</span>, <span class="number">-2</span>))<span class="comment">;</span></span><br><span class="line">    &#125;</span><br><span class="line">    printf(<span class="string">"%d\n"</span>, luaL_checkinteger(<span class="name">L</span>, <span class="number">-1</span>))<span class="comment">;</span></span><br><span class="line">    lua_pop(<span class="name">L</span>, <span class="number">1</span>)<span class="comment">;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">lua_close(<span class="name">L</span>)<span class="comment">;</span></span><br><span class="line"></span><br><span class="line">-- lua_isnumber也有类似问题，实现中是调用lua_tonumber看能否转换成number类型来判断，而这会改动lua虚拟堆栈结构，在遍历lua table的时候有问题</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>Lua的C API中的lua_type函数，得到的类型可以用来判断布尔，nil，字符串类型,比如lua_type(L, -1) == LUA_TSTRING,但是不能用来直接判断整数，不能lua_type(L, -1) == LUA_TNUMINT  因为Lua 5.3中虽然区分了int和number类型，把整数和浮点数区分出来了，但是lua_type的返回类型都是LUA_TNUMBER，LUA_TNUMINT和LUA_TNUMFLT都是LUA_TNUMBER进行偏移后的结果。需要判断类型的时候整数需要使用lua_isinteger(L,-1)，浮点数需要使用lua_type(L, -1) == LUA_TNUMBER</p>
+</li>
+<li><p>Lua的一些函数比如#，ipairs, table中一些函数，都是只对Lua table中的数组部分起效果，建议不要对同一个lua table同时使用数组部分和哈希表部分，可能容易出错。我们的做法是对Lua语言做了修改，增加了可选的类型声明和编译期静态类型系统并区分了Array<t>和Map<t>类型，减少混用导致的问题。</t></t></p>
+</li>
+<li><p>Lua中的数学操作符，必须参数都是数字，注意使用时候不要错误使用了类型，包括nil也不行，比如+/-/*//还有其他一些数学操作符</p>
+</li>
+<li><p>注意区分lua_pcall/lua_pcallk和lua_call/lua_callk的使用区分，前者是runproteced模式下运行，也就是会捕获运行时异常并处理，不对使用者再直接抛出异常崩溃.但是也不要乱用lua_pcall，只在最外层使用</p>
+</li>
+<li><p>暂时就想到这些，以前可能也碰到一些其他问题没记录下来，以后我想起或者又碰到了再补充</p>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-一个简单的正则表达式和语法分析引擎的JavaScript实现parser-js" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/04/06/一个简单的正则表达式和语法分析引擎的JavaScript实现parser-js/">一个简单的正则表达式和语法分析引擎的JavaScript实现parser.js</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2015/04/06/一个简单的正则表达式和语法分析引擎的JavaScript实现parser-js/" class="article-date">
+  <time datetime="2015-04-06T11:13:10.000Z" itemprop="datePublished">2015-04-06</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>前段时间为了克服拖延症,花了几天时间把以前一直想填的一个小坑填了,就是这个parser.js库了 <a href="https://github.com/zoowii/parser.js" target="_blank" rel="noopener">https://github.com/zoowii/parser.js</a></p>
+<p>懒得写,就把readme.md抄一部分过来</p>
+<h2 id="Features"><a href="#Features" class="headerlink" title="Features"></a>Features</h2><ul>
+<li>实现了一个基于NFA的正则表达式引擎实现(正则表达式字符串的解析使用自身实现的底层API和下面的语法解析引擎来实现的),支持主要正则功能已经分组捕获等</li>
+<li>实现了一个语法解析引擎(支持左递归定义,语法定义简单)</li>
+<li>提供一个整合了词法分析和语法分析的API,方便使用,可以直接生成最终满足要求的抽象语法树(直接生成最初定义规则对应的抽象语法树,而不是解析过程中的中间产物)</li>
+<li>为了性能考虑,另外提供了一个使用内置正则引擎的快速词法分析实现,并且尽量兼容自己实现的正则API,从而可以在性能有问题时切换</li>
+<li>直接浏览器和Node.js环境,且不依赖任何第三方库</li>
+</ul>
+<h2 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a>Demo</h2><ul>
+<li>正则表达式引擎demo</li>
+</ul>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">console.<span class="built_in">log</span>('-----<span class="keyword">test</span> regex string reader=====');</span><br><span class="line"><span class="keyword">var</span> expr1 = RegexReader.<span class="keyword">read</span>(<span class="string">"\"</span>(a&#123;3,&#125;)(b+)(([c\\s\\.\\<span class="keyword">d</span>\\\\\\+\\u1234])*)");</span><br><span class="line">expr1.build();</span><br><span class="line">console.<span class="built_in">log</span>('regex build done');</span><br><span class="line"><span class="keyword">var</span> r1 = expr1.<span class="built_in">match</span>(<span class="string">"aabbbc 123+556end"</span>);</span><br><span class="line"><span class="keyword">var</span> r2 = expr1.<span class="built_in">match</span>(<span class="string">"\"</span>aaaabbbc 123+556");</span><br><span class="line"><span class="comment">// var expr2 = RegexReader.read("abc");</span></span><br><span class="line">console.<span class="built_in">log</span>(expr1.<span class="keyword">toString</span>());</span><br><span class="line">console.<span class="built_in">log</span>(r1.<span class="keyword">toString</span>());</span><br><span class="line">console.<span class="built_in">log</span>(r2.<span class="keyword">toString</span>());</span><br><span class="line"><span class="keyword">assert</span>.equal(false, r1.matched);</span><br><span class="line"><span class="keyword">assert</span>.equal(true, r2.matched);</span><br><span class="line">console.<span class="built_in">log</span>('-----end <span class="keyword">test</span> regex string reader-----');</span><br></pre></td></tr></table></figure>
+<ul>
+<li>语法分析demo</li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">console.log('-----test parser api-----');</span><br><span class="line">parser.clearVarCache();</span><br><span class="line"><span class="keyword">var</span> syntaxParserAndTokener = parser.buildSyntaxTreeParser(<span class="type">V</span>(<span class="symbol">'jso</span>n'), [</span><br><span class="line">    [<span class="type">V</span>(<span class="symbol">'boo</span>l'),</span><br><span class="line">        <span class="string">"(?:true|false)\\s*"</span>],</span><br><span class="line">    [<span class="type">V</span>(<span class="symbol">'numbe</span>r'),</span><br><span class="line">        <span class="string">"(?:[+-]?(?:(0x[0-9a-fA-F]+|0[0-7]+)|((?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?|NaN|Infinity)))\\s*"</span>],</span><br><span class="line">    [<span class="type">V</span>(<span class="symbol">'strin</span>g'),</span><br><span class="line">        <span class="string">"(?:(?:\"((?:\\.|[^\"])*)\"|'((?:\\.|[^'])*)'))\\s*"</span>],</span><br><span class="line">    [<span class="type">V</span>(<span class="symbol">'nam</span>e'),</span><br><span class="line">        <span class="type">V</span>(<span class="symbol">'strin</span>g')],</span><br><span class="line">    [<span class="type">V</span>(<span class="symbol">'valu</span>e'),</span><br><span class="line">        <span class="type">V</span>(<span class="symbol">'boo</span>l'), <span class="type">V</span>(<span class="symbol">'numbe</span>r'), <span class="type">V</span>(<span class="symbol">'strin</span>g'), <span class="type">V</span>(<span class="symbol">'json</span>-<span class="class"><span class="keyword">object</span>'), <span class="title">V</span>(<span class="params">'json-array'</span>)],</span></span><br><span class="line"><span class="class">    [<span class="type">V</span>('json-object-pair'),</span></span><br><span class="line"><span class="class">        [<span class="type">V</span>('name'), ":\\s*", <span class="type">V</span>('value')]],</span></span><br><span class="line"><span class="class">    [<span class="type">V</span>('json-object-pairs'),</span></span><br><span class="line"><span class="class">        <span class="type">V</span>('json-object-pair'),</span></span><br><span class="line"><span class="class">        [<span class="type">V</span>('json-object-pair'), ",\\s*", <span class="type">V</span>('json-object-pairs')]</span></span><br><span class="line"><span class="class">    ],</span></span><br><span class="line"><span class="class">    [<span class="type">V</span>('json-object'),</span></span><br><span class="line"><span class="class">        ["\\&#123;\\s*", <span class="type">V</span>('json-object-pairs'), "\\&#125;\\s*"]],</span></span><br><span class="line"><span class="class">    [<span class="type">V</span>('values'),</span></span><br><span class="line"><span class="class">        <span class="type">V</span>('value'),</span></span><br><span class="line"><span class="class">        [<span class="type">V</span>('value'), ",\\s*", <span class="type">V</span>('values')]],</span></span><br><span class="line"><span class="class">    [<span class="type">V</span>('json-array'),</span></span><br><span class="line"><span class="class">        ["\\[\\s*", <span class="type">V</span>('values'), "]<span class="title">\\s*</span>"]],</span></span><br><span class="line"><span class="class">    [<span class="type">V</span>('json'),</span></span><br><span class="line"><span class="class">        <span class="type">V</span>('json-object'), <span class="type">V</span>('json-array'), [<span class="type">V</span>("\\s+"), <span class="type">V</span>('json')]]</span></span><br><span class="line"><span class="class">])</span>;</span><br><span class="line"><span class="keyword">var</span> jsonParser = syntaxParserAndTokener.parser;</span><br><span class="line"><span class="keyword">var</span> tokenPatterns = syntaxParserAndTokener.token_patterns;</span><br><span class="line"><span class="keyword">var</span> text = '&#123;<span class="string">"name"</span>: <span class="string">"zoowii"</span>, <span class="string">"age"</span>: <span class="number">24</span>, <span class="string">"position"</span>: &#123;<span class="string">"country"</span>: <span class="string">"China"</span>, <span class="string">"city"</span>: <span class="string">"Nanjing"</span>&#125;&#125;';</span><br><span class="line"><span class="keyword">var</span> tokens = parser.generateTokenListUsingInnerRegex(tokenPatterns, text, console.log);</span><br><span class="line"><span class="keyword">var</span> json = jsonParser.parse(tokens);</span><br><span class="line">console.log(json.toString());</span><br><span class="line">console.log('-----end test parser api-----');</span><br></pre></td></tr></table></figure>
+<h2 id="目前支持的正则表达式特性"><a href="#目前支持的正则表达式特性" class="headerlink" title="目前支持的正则表达式特性"></a>目前支持的正则表达式特性</h2><ul>
+<li>‘|’</li>
+<li>( … ) group</li>
+<li>\d digit</li>
+<li>\w alpha or digit</li>
+<li>\uabcd unicode char support</li>
+<li>a-b char range</li>
+<li>[abc] union</li>
+<li>[^abc] except union</li>
+<li>abc concat</li>
+<li>a+ repeat at least one times</li>
+<li>a* repeat at least zero times</li>
+<li>a? repeat one or zero times</li>
+<li>a{m[,n]} repeat at least m times [and at most n times]</li>
+<li>. any char</li>
+<li>\s space</li>
+<li>\ + * { [ ( | \? . - … escape</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-一个把hibernate-jpa-jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/04/06/一个把hibernate-jpa-jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils/">一个把hibernate/jpa/jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2015/04/06/一个把hibernate-jpa-jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils/" class="article-date">
+  <time datetime="2015-04-05T16:27:13.000Z" itemprop="datePublished">2015-04-06</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本博客系统使用Java Web实现,其中数据库层操作虽然直接写SQL或者使用MyBatis比较可控,<br>但是我对于快糙猛的项目一向懒得慢慢写,所以挺久之前封装过一个类似ActiveRecord的数据库操作库,<br>是对Hibernate/JPA/jdbc的封装,从而在上层使用时比较方便,又可以随时fallback到使用下层的Hibernate/JPA/jdbc. 项目名叫做jpa-utils</p>
+<pre><code>项目地址: [https://github.com/zoowii/jpa-utils](https://github.com/zoowii/jpa-utils)
+</code></pre><h2 id="目前的特性包括"><a href="#目前的特性包括" class="headerlink" title="目前的特性包括"></a>目前的特性包括</h2><ul>
+<li>底层基于JPA或者Hibernate的Session/SessionFactory，基于HQL/SQL，比自己再轮一个类HQL稳定</li>
+<li>也提供直接基于jdbc的支持,从而可以不依赖Hibernate等ORM,也方便直接和jdbc Connection, MyBatis, DbUtils, 数据库连接池等库直接集成使用</li>
+<li>直接基于jdbc Connection的话,ORM映射部分目前只支持MySQL和H2数据库,其他数据库待支持</li>
+<li>可以自动从JPA配置创建管理session,也可以手动指定EntityManagerFactory/EntityManager/SessionFactory(hibernate)/Session(hibernate)来构造jpa-utils中的Session来使用,还可以直接从jdbc Connection构造Session</li>
+<li>提供类似ActiveRecord的使用方便友好的API，特别是查询API</li>
+<li>查询的核心Finder类可以单独使用，直接使用到现有的使用JPA或Hibernate的代码中，只需要根据现有EntityManager/Session(hibernate)构造一个jpa-utils的session，然后使用Finder类来查询就好了</li>
+<li>支持类似MyBatis的执行编程式XML中的SQL(TODO)</li>
+</ul>
+<p>因为没有发布到公网maven repo,所以如果要用,要么maven install,要么发布到自己meven repo私服,要么mvn package成jar后自己使用</p>
+<h2 id="使用DEMO"><a href="#使用DEMO" class="headerlink" title="使用DEMO"></a>使用DEMO</h2><figure class="highlight sqf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// maven</span></span><br><span class="line">!!! First deploy it <span class="keyword">to</span> you <span class="built_in">local</span> maven nexus, <span class="keyword">then</span>.</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">     &lt;<span class="built_in">groupId</span>&gt;com.zoowii&lt;/<span class="built_in">groupId</span>&gt;</span><br><span class="line">     &lt;artifactId&gt;jpa-utils&lt;/artifactId&gt;</span><br><span class="line">     &lt;version&gt;x.y.z&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line"><span class="comment">// create</span></span><br><span class="line">Session session = EntitySession.currentSession(); <span class="comment">// or Session.getSession(persistentUnitName);</span></span><br><span class="line">session.begin();</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">for</span> (int i = <span class="number">0</span>; i &lt; <span class="number">10</span>; ++i) &#123;</span><br><span class="line">        Employee employee = new Employee();</span><br><span class="line">        employee.<span class="built_in">setName</span>(<span class="string">"employee_"</span> + StringUtil.randomString(<span class="number">10</span>));</span><br><span class="line">        employee.setAge(new <span class="built_in">Random</span>().nextInt(<span class="number">100</span>));</span><br><span class="line">        employee.save(); <span class="comment">// or employee.save(session);</span></span><br><span class="line">        logger.info(<span class="string">"new employee "</span> + employee.getId());</span><br><span class="line">    &#125;</span><br><span class="line">    session.commit();</span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">    session.rollback();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// query</span></span><br><span class="line">Session session = Session.currentSession();</span><br><span class="line">session.begin();</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    Query&lt;Employee&gt; query = Employee.<span class="built_in">find</span>.where().gt(<span class="string">"age"</span>, <span class="number">50</span>);</span><br><span class="line">    query = query.limit(<span class="number">8</span>);</span><br><span class="line">    <span class="built_in">List</span>&lt;Employee&gt; employees = query.all(); <span class="comment">// or query.all(session);</span></span><br><span class="line">    <span class="keyword">for</span> (int i = <span class="number">0</span>; i &lt; employees.<span class="built_in">size</span>(); ++i) &#123;</span><br><span class="line">        Employee employee = employees.get(i);</span><br><span class="line">        logger.info((i + <span class="number">1</span>) + <span class="string">". employee "</span> + employee.getId());</span><br><span class="line">    &#125;</span><br><span class="line">    logger.info(<span class="string">"total: "</span> + query.<span class="built_in">count</span>()); <span class="comment">// or query.count(session);</span></span><br><span class="line">    session.commit();</span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">    session.rollback();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-程序语言的词法作用域中同名变量的rename" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/04/06/程序语言的词法作用域中同名变量的rename/">程序语言的词法作用域中同名变量的rename</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2015/04/06/程序语言的词法作用域中同名变量的rename/" class="article-date">
+  <time datetime="2015-04-05T16:00:00.000Z" itemprop="datePublished">2015-04-06</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>TODO </p>
+<p>关于在实现程序语言中,如何实现对不同词法作用域中同名变量的rename操作,从而下一步操作更加方便.</p>
+<p>比如把如下代码</p>
+<figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">func1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> name = <span class="string">"zoowii"</span>;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">func2</span><span class="params">(name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Hello, "</span> + name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>自动修改为<br><figure class="highlight actionscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">func1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> name = <span class="string">"zoowii"</span>;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">func2</span><span class="params">(name_unique_2)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Hello, "</span> + name_unique_2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>先记下来,有空再写</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-理解Spring-Framework框架原理和实现细节" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2015/02/06/理解Spring-Framework框架原理和实现细节/">理解Spring-Framework框架原理和实现细节</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2015/02/06/理解Spring-Framework框架原理和实现细节/" class="article-date">
+  <time datetime="2015-02-05T16:00:00.000Z" itemprop="datePublished">2015-02-06</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>为了理解spring framework,轮了个zuice项目，包含大部分spring的功能和灵活性，不过扔bitbucket上还没放出来，有空整理下代码再释放</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-一个js的小玩具ring-js-类似Ring风格的一个web-framework" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/11/10/一个js的小玩具ring-js-类似Ring风格的一个web-framework/">一个js的小玩具ring.js,类似Ring风格的一个web-framework</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/11/10/一个js的小玩具ring-js-类似Ring风格的一个web-framework/" class="article-date">
+  <time datetime="2014-11-09T16:00:00.000Z" itemprop="datePublished">2014-11-10</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>前段时间一时兴起,弄了个新玩具,ring.js, 项目地址<a href="https://github.com/zoowii/ring.js" target="_blank" rel="noopener">https://github.com/zoowii/ring.js</a></p>
+<p>这是一个非常简陋的类似于Clojure的Ring库的node.js框架</p>
+<h2 id="使用Demo"><a href="#使用Demo" class="headerlink" title="使用Demo"></a>使用Demo</h2><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">function helloHandler(req, name) &#123;</span><br><span class="line">    return <span class="string">'hello, '</span> + name;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">function fileTestHandler(req, path) &#123;</span><br><span class="line">    return new ring.FileStream(<span class="string">'/Users/zoowii/SystemVersion.plist'</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">app = ringMiddlewares.routesMiddleware(app, defroutes(</span><br><span class="line">    <span class="builtin-name">GET</span>(<span class="string">'/'</span>, <span class="string">'index'</span>, <span class="string">'index'</span>),</span><br><span class="line">    <span class="builtin-name">GET</span>(<span class="string">'/hello/:name'</span>, helloHandler),</span><br><span class="line">    <span class="builtin-name">GET</span>(<span class="string">"/test/:id/update"</span>, <span class="string">"test-handler"</span>, <span class="string">"test"</span>),</span><br><span class="line">    <span class="builtin-name">GET</span>(<span class="string">'/test/file/:*path'</span>, fileTestHandler, <span class="string">'file-test'</span>),</span><br><span class="line">    context(<span class="string">"/user"</span>, [</span><br><span class="line">        <span class="builtin-name">GET</span>(<span class="string">"/:id/view/:project/:*path"</span>, <span class="string">"view_user_handler"</span>, <span class="string">"view_user"</span>),</span><br><span class="line">        POST(<span class="string">"/:id/view/:project/:*path"</span>, <span class="string">"update_user_handler"</span>, <span class="string">"update_user"</span>)</span><br><span class="line">    ]),</span><br><span class="line">    ANY(<span class="string">"/:*path"</span>, <span class="string">'404-handler'</span>, <span class="string">'404'</span>)</span><br><span class="line">));</span><br><span class="line">app = ringMiddlewares.resourceMiddleware(app, <span class="string">'/static'</span>, __dirname);</span><br><span class="line">var<span class="built_in"> server </span>= httpAdapter(app, &#123;</span><br><span class="line">    port: 3000</span><br><span class="line">&#125;);</span><br><span class="line">server.start(function () &#123;</span><br><span class="line">    console.log(<span class="string">'listening at http://127.0.0.1:3000'</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<h2 id="ring-js概念"><a href="#ring-js概念" class="headerlink" title="ring.js概念"></a>ring.js概念</h2><p>ring.js包括handler, middleware, adapter, request, response这些对象的概念</p>
+<h3 id="handler"><a href="#handler" class="headerlink" title="handler"></a>handler</h3><p>handler是一个接受request返回response的函数,整个ring.js的webapp就是一个handler</p>
+<h3 id="middleware"><a href="#middleware" class="headerlink" title="middleware"></a>middleware</h3><p>middleware是一个接受若干个handlers和options配置的函数,返回一个新的handler</p>
+<h3 id="adapter"><a href="#adapter" class="headerlink" title="adapter"></a>adapter</h3><p>adapter封装底层http库等协议,在adapter上可以运行ring.js的webapp,也就是handler. adapter是一个接受一个handler(暴露的ring.js webapp)和options的函数,options可以包括address, port等信息 当一个新请求到来时,adapter封装这个请求成一个request,交给参数中的handler,然后把返回的response作为http回复</p>
+<h3 id="request"><a href="#request" class="headerlink" title="request"></a>request</h3><p>request代表一个http请求,是一个javascript object,结构如下:</p>
+<figure class="highlight thrift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  server_port: (<span class="keyword">required</span>, int),</span><br><span class="line">  upgrade: (<span class="keyword">required</span>, boolean), <span class="comment">// true/false</span></span><br><span class="line">  server_name: (<span class="keyword">required</span>, <span class="built_in">string</span>),</span><br><span class="line">  remote_addr: (<span class="keyword">required</span>, <span class="built_in">string</span>), <span class="comment">// 请求发送方或者最后一层代理的地址</span></span><br><span class="line">  uri: (<span class="keyword">required</span>, <span class="built_in">string</span>), <span class="comment">// 请求uri, 以'/'开头</span></span><br><span class="line">  query_string: (<span class="keyword">optional</span>, <span class="keyword">map</span>),</span><br><span class="line">  scheme: (<span class="keyword">required</span>, <span class="built_in">string</span>), <span class="comment">// 传输协议,目前支持http和https, 转换成小写</span></span><br><span class="line">  http_version: (<span class="keyword">optional</span>, <span class="built_in">string</span>), <span class="comment">// http协议版本,比如1.1</span></span><br><span class="line">  request_method: (<span class="keyword">required</span>, <span class="built_in">string</span>), <span class="comment">// 请求方法, 转换成小写,包括get, post, head, put, delete等</span></span><br><span class="line">  content_type: (<span class="keyword">optional</span>, <span class="built_in">string</span>),</span><br><span class="line">  content_length: (<span class="keyword">optional</span>, int),</span><br><span class="line">  character_encoding: (<span class="keyword">optional</span>, <span class="built_in">string</span>), <span class="comment">// 用来转换request body的编码</span></span><br><span class="line">  ssl_client_cert: (<span class="keyword">optional</span>, <span class="built_in">byte</span>[]), <span class="comment">// 客户端SSL证书</span></span><br><span class="line">  headers: (<span class="keyword">required</span>, <span class="keyword">map</span>), <span class="comment">// http头信息, header name都转换成小写</span></span><br><span class="line">  body: (<span class="keyword">optional</span>, stream) <span class="comment">// http请求body</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="response"><a href="#response" class="headerlink" title="response"></a>response</h3><p>response代表一个http回复,是一个javascript object,或者是一个future对象,如果response是一个map,结构如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  status: (required, <span class="keyword">int</span>), <span class="comment">// &gt;= 100, http status code</span></span><br><span class="line">  headers: (required, <span class="built_in">map</span>), <span class="comment">// http回复的头信息</span></span><br><span class="line">  body: (optional, <span class="built_in">string</span>/其他对象的<span class="built_in">array</span>/iterator/file/stream/上面对象的<span class="built_in">future</span>, <span class="comment">// http回复的body</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果response是一个future对象,则监听这个future对象的data事件和end事件,获取到map形式的response chunk并输出</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/05/07/一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本/">一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/05/07/一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本/" class="article-date">
+  <time datetime="2014-05-06T16:00:00.000Z" itemprop="datePublished">2014-05-07</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>因为我更喜欢使用Chrome作为日常浏览网页的浏览器,但是经常点着点着就打开了一大票标签页,然后一时间有没时间看完,这些东西有些也许就是一次性看完就扔的,保存到pocket感觉太大材小用而且容易让pocket中充满各种”垃圾”,如果关掉的话将来再找也麻烦.</p>
+<p>所以我一般喜欢把这些标签页都拷贝到不是最常用的Safari浏览器中,方便下次阅读.</p>
+<p>前两天我在QQ群里灌水时说到这个问题,然后听@Dawn提到AppleScript好像可以解决这个问题.以前对AppleScript只听过没见过,今天晚上搜了下,果然神器,于是Google了一下找了几段demo代码对照着写了个,感觉还可以,对于一些小工具性质的软件来说,applescript实在是太方便了.</p>
+<p>这个AppleScript脚本虽然只有10几行,但是已经可以完成将当期chrome窗口中打开的标签页都在Safari中打开了,达到了我的目标,很好.</p>
+<p>直接上代码:</p>
+<p><a href="https://gist.github.com/zoowii/b1818fae22792e4e9bab" target="_blank" rel="noopener">https://gist.github.com/zoowii/b1818fae22792e4e9bab</a></p>
+<pre><code>tell application &quot;Google Chrome&quot;
+ set cur_win to first window
+ tell cur_win
+  set urls to URL of tabs of cur_win
+  set numOfUrls to (count urls)
+  -- repeat with i from 1 to (numOfUrls)
+  repeat with itemUrl in (urls)
+   -- set itemUrl to (item i of urls)
+   tell application &quot;Safari&quot; to tell first window to open location itemUrl
+  end repeat
+  tell application &quot;Safari&quot; to activate
+  tell application &quot;Safari&quot; to display dialog &quot;Move tabs from Chrome to Safari successfully&quot;
+ end tell
+end tell
+</code></pre><p>下载地址: <a href="http://pan.baidu.com/s/1sjHHmXJ" target="_blank" rel="noopener">http://pan.baidu.com/s/1sjHHmXJ</a></p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+  
+    <nav id="page-nav">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+    </nav>
+  
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

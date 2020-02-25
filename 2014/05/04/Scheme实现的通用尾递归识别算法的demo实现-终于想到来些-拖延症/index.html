@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Scheme实现的通用尾递归识别算法的demo实现,终于想到来些,拖延症... | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="几个月前,我有写过一篇博客, /2013/12/21/浅谈尾递归的定义和判定方法/ ,描述了一种用来识别简单和复杂尾递归的通用算法,后来还写了一篇博客描述了尾递归优化算法使用代码变换方式的一种实现算法(通过另外的基于continuation的计算模型也可以直接实现尾递归优化,因为那样没有了栈机制), 之后我一直想写代码去具体实现,终于,今天晚上QQ群灌水到没人在线时我打算来写一下了. 今天晚上只写">
+<meta name="keywords" content="Scheme">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Scheme实现的通用尾递归识别算法的demo实现,终于想到来些,拖延症...">
+<meta property="og:url" content="http://zoowii.com/2014/05/04/Scheme实现的通用尾递归识别算法的demo实现-终于想到来些-拖延症/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="几个月前,我有写过一篇博客, /2013/12/21/浅谈尾递归的定义和判定方法/ ,描述了一种用来识别简单和复杂尾递归的通用算法,后来还写了一篇博客描述了尾递归优化算法使用代码变换方式的一种实现算法(通过另外的基于continuation的计算模型也可以直接实现尾递归优化,因为那样没有了栈机制), 之后我一直想写代码去具体实现,终于,今天晚上QQ群灌水到没人在线时我打算来写一下了. 今天晚上只写">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="http://zoowiipublicstore.qiniudn.com/tail-recur-recognization%E6%89%A7%E8%A1%8C%E7%BB%93%E6%9E%9C%E6%88%AA%E5%9B%BE.png">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.877Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Scheme实现的通用尾递归识别算法的demo实现,终于想到来些,拖延症...">
+<meta name="twitter:description" content="几个月前,我有写过一篇博客, /2013/12/21/浅谈尾递归的定义和判定方法/ ,描述了一种用来识别简单和复杂尾递归的通用算法,后来还写了一篇博客描述了尾递归优化算法使用代码变换方式的一种实现算法(通过另外的基于continuation的计算模型也可以直接实现尾递归优化,因为那样没有了栈机制), 之后我一直想写代码去具体实现,终于,今天晚上QQ群灌水到没人在线时我打算来写一下了. 今天晚上只写">
+<meta name="twitter:image" content="http://zoowiipublicstore.qiniudn.com/tail-recur-recognization%E6%89%A7%E8%A1%8C%E7%BB%93%E6%9E%9C%E6%88%AA%E5%9B%BE.png">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Scheme实现的通用尾递归识别算法的demo实现-终于想到来些-拖延症" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Scheme实现的通用尾递归识别算法的demo实现,终于想到来些,拖延症...
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/05/04/Scheme实现的通用尾递归识别算法的demo实现-终于想到来些-拖延症/" class="article-date">
+  <time datetime="2014-05-03T16:00:00.000Z" itemprop="datePublished">2014-05-04</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>几个月前,我有写过一篇博客, <a href="/2013/12/21/浅谈尾递归的定义和判定方法/">/2013/12/21/浅谈尾递归的定义和判定方法/</a> ,描述了一种用来识别简单和复杂尾递归的通用算法,后来还写了一篇博客描述了尾递归优化算法使用代码变换方式的一种实现算法(通过另外的基于continuation的计算模型也可以直接实现尾递归优化,因为那样没有了栈机制), 之后我一直想写代码去具体实现,终于,今天晚上QQ群灌水到没人在线时我打算来写一下了.</p>
+<p>今天晚上只写了尾递归的识别算法的实现,而且没有做什么测试,写得匆忙,加上最近用Clojure,已经忘了scheme API怎么用了,所以,代码质量和鲁棒性不敢恭维,有问题看上面博客吧.</p>
+<p>Github项目: <a href="https://github.com/zoowii/tail-rec-optimization" target="_blank" rel="noopener">https://github.com/zoowii/tail-rec-optimization</a></p>
+<p>先直接上代码(<a href="https://gist.github.com/zoowii/6932942e8661f8544ee3" target="_blank" rel="noopener">https://gist.github.com/zoowii/6932942e8661f8544ee3</a>)</p>
+<pre><code># lang racket
+;; 这里是示例代码，这段代码在Scheme中是可以执行的，因为Scheme标准规定了需要尾递归优化
+
+
+;; 而对应的JavaScript代码是无法运行的，因为没有做尾递归优化，很快就超过最大调用深度了
+
+
+(define (foo n)
+
+
+ (if (&gt; n 20140000)
+
+
+    (begin
+
+
+      (display &quot;foo&quot;)
+
+
+       n)
+
+
+    (bar (+ n 1))))
+
+
+(define (bar n)
+
+
+  (if (&gt; n 20130000)
+
+
+     (begin
+
+
+        (display &quot;bar&quot;)
+
+
+         n)
+
+
+     (foo (+ n 2))))
+
+
+(display (foo 1234))
+
+
+
+
+
+;; 下面开始实际程序
+
+
+(define call/cc call-with-current-continuation)
+
+
+
+
+
+;; 这里是上面的示例代码，program就是实际使用中的程序代码（宏展开后）
+
+
+(define program &apos;((define (foo n)
+
+
+ (if (&gt; n 20140000)
+
+
+    (begin
+
+
+      (display &quot;foo&quot;)
+
+
+       n)
+
+
+    (bar (+ n 1))))
+
+
+(define (bar n)
+
+
+  (if (&gt; n 20130000)
+
+
+     (begin
+
+
+        (display &quot;bar&quot;)
+
+
+         n)
+
+
+     (foo (+ n 2))))
+
+
+(foo 1234) ; 这里没有加上display，是为了方便程序找到这个需要尾递归优化的函数foo
+
+
+  ))
+
+
+
+
+
+(define (id form)
+
+
+  ;; 辅助函数，一个返回参数自身的函数
+
+
+  form)
+
+
+
+
+
+(define (procedure-definition? form)
+
+
+  ;; 判断一个form是不是一个函数定义
+
+
+  (if (and (list? form)
+
+
+           (&gt; (length form) 2)
+
+
+           (eq? (car form) &apos;define)
+
+
+           (list? (cadr form))
+
+
+           (&gt; (length (cadr form)) 1)
+
+
+           )
+
+
+      #t
+
+
+      #f))
+
+
+
+
+
+(define (find-procedure-definitions program)
+
+
+  ;; 找到一段程序中所有的函数定义的名称
+
+
+  (filter id
+
+
+          (map (lambda (form)
+
+
+                 (if (procedure-definition? form)
+
+
+                     (caadr form)
+
+
+                     #f))
+
+
+               program)))
+
+
+
+
+
+(define (name-of-proc-definition proc-definition)
+
+
+  ;; 在一个函数定义的代码中获取函数名称
+
+
+  (caadr proc-definition))
+
+
+
+
+
+(define (find-func-calls program)
+
+
+  ;; 找到一段程序中除了函数定义之外的函数调用，比如(foo 1234)
+
+
+  (filter id
+
+
+          (map (lambda (form)
+
+
+                 (if (procedure-definition? form)
+
+
+                     #f
+
+
+                     form)) program)))
+
+
+
+
+
+(define (func-called program)
+
+
+  ;; 找到一段程序中所有顶层被调用的函数,除了函数定义这类special form
+
+
+  (map (lambda (form) (car form))
+
+
+       (find-func-calls program)))
+
+
+
+
+
+(define (get-proc-definition program func)
+
+
+  ;; 在一段程序中找到某个函数的定义代码
+
+
+  (let ([procs (filter (lambda (f)
+
+
+                        (equal? (name-of-proc-definition f)
+
+
+                           func))
+
+
+                      (filter procedure-definition?
+
+
+                              program))])
+
+
+    (car procs)))
+
+
+
+
+
+(define (merge cols)
+
+
+  ;; 合并一组列表
+
+
+  (if (empty? cols)
+
+
+      &apos;()
+
+
+      (let ([l1 (car cols)]
+
+
+            [ll (cdr cols)])
+
+
+        (if (empty? l1)
+
+
+            (merge ll)
+
+
+            (cons (car l1)
+
+
+                  (merge (cons (cdr l1) ll)))))))
+
+
+
+
+
+(define (get-last-exprs forms)
+
+
+  ;; 获取一个form集合中所有可能最后执行的form
+
+
+  (merge
+
+
+   (map (lambda (form)
+
+
+         (cond  ;; 目前只考虑if和begin两种结构化,因为只是demo,如果是具体的编译器/解释器,自行获取最后可能执行的form
+
+
+           [(not (list? form))
+
+
+            (list form)]
+
+
+           [(equal? &apos;if (car form))
+
+
+            (if (&gt; (length form) 3)
+
+
+                (get-last-exprs (list (caddr form)
+
+
+                      (cadddr form)))
+
+
+                (get-last-exprs (list (caddr form))))]
+
+
+           [(equal? &apos;begin (car form))
+
+
+            (get-last-exprs (list (last form)))]
+
+
+           [#t (list form)]))
+
+
+       forms)))
+
+
+
+
+
+(define (get-body-of-proc-definition proc-definition)
+
+
+  ;; 获取一个函数定义代码段中的body部分
+
+
+  (cddr proc-definition))
+
+
+
+
+
+(define (base? form)
+
+
+  ;; 判断一个form是否是基本类型,比如数值,字符串,布尔值,符号symbol
+
+
+  ;; 也就是是否不是list
+
+
+  (not (list? form)))
+
+
+
+
+
+;;; 要记住在一个函数在一个函数集中尾递归依赖的函数
+
+
+(define (find-tail-rec-required-funcs func program)
+
+
+  ;; 找到一个函数的尾递归依赖的函数集(就是尾部调用的函数,没有地柜调用)
+
+
+  ;; 没有考虑更复杂的词法作用域,匿名函数等,这些由具体编译器/解释器的实现来判断
+
+
+  (let* ([func-body (get-body-of-proc-definition
+
+
+                    (get-proc-definition program func))]
+
+
+        [last-exprs (get-last-exprs func-body)]
+
+
+        [last-exprs-requirements (map
+
+
+                                  (lambda (form)
+
+
+                                    (if (base? form)
+
+
+                                        #t
+
+
+                                        (let ([item1 (car form)])
+
+
+                                          (if (list? item1)
+
+
+                                              #f
+
+
+                                              item1))))
+
+
+                                  last-exprs)])
+
+
+    last-exprs-requirements))
+
+
+
+
+
+(define (into-set item col)
+
+
+  ;; 在一个集合中添加一项,如果这个值已经存在,则不添加(也就是当做set)处理
+
+
+  (if (member item col)
+
+
+      col
+
+
+      (cons item col)))
+
+
+
+
+
+(define (sub-set col1 col2)
+
+
+  ;; 判断col1是否是col2的子集
+
+
+  (let* ([diff (filter (lambda (x)
+
+
+                         (not (member x col2)))
+
+
+                       col1)])
+
+
+    (empty? diff)))
+
+
+
+
+
+(define (find-requirements-col func program col C-col)
+
+
+  ;; 在一个集合中找到依赖函数集
+
+
+  ;; 过程就是找到尾部依赖的内容,进行判断,如果是一个函数调用,判断这个函数是否已经加入到col中,以及其他判断和操作
+
+
+  ;; 如果不是尾递归的,返回#f, 如果是尾递归的, 返回#t, 如果依赖一个函数集,返回这个函数集
+
+
+  ;; C-col记录依赖集的作用范围, col记录依赖的函数
+
+
+  (let* ([last-exprs (find-tail-rec-required-funcs func program)])
+
+
+    (if (member #f last-exprs)
+
+
+        (list #f C-col)
+
+
+        (let* ([exprs (filter (lambda (x) (and (not (boolean? x))
+
+
+                                              (not (member x col))
+
+
+                                              (not (equal? x func))))
+
+
+                              last-exprs)]
+
+
+               [new-col (merge (list col))]
+
+
+               [C-col (merge (list col exprs))]
+
+
+               [exprs-require (map (lambda (x)
+
+
+                                     (find-requirements-col x program new-col C-col))
+
+
+                                   exprs)]
+
+
+               [exprs-require (filter (lambda (x)
+
+
+                                        (not (boolean? x)))
+
+
+                                      (map car exprs-require))])
+
+
+          (if (empty? exprs)
+
+
+              (list #t C-col)
+
+
+              (if (member #f exprs-require)
+
+
+              (list #f C-col)
+
+
+              (let* ([exprs-require (filter (lambda (rs)
+
+
+                                           (not (sub-set rs new-col)))
+
+
+                                         exprs-require)]
+
+
+                     [new-col (merge (list (merge exprs-require) new-col))])
+
+
+                (if (and (= 1 (length new-col))
+
+
+                         (equal? func (car new-col)))
+
+
+                    (list #t C-col)
+
+
+                    (list new-col C-col)))))))))
+
+
+
+
+
+(define (find=tail-rec-of-func program func)
+
+
+  ;; 在一段程序中判断函数func是否是尾递归的,
+
+
+  ;; 如果是,返回使尾递归成立的最小函数集合(范围),
+
+
+  ;; 否则,返回nil
+
+
+  (find-requirements-col func program (list func) (list func)))
+
+
+
+
+
+(define (println . args)
+
+
+  (begin
+
+
+    (map (lambda (x) (display x)) args)
+
+
+    null))
+
+
+
+
+
+(define (find-tail-rec program)
+
+
+  ;; 找到一段程序中的所有尾递归
+
+
+  ;; 目前为了简单起见，而且demo代码中顶层只有一个函数调用(foo 1234)。所以只考虑最后一个函数调用，作为要判断尾递归优化的目标
+
+
+  (let* ([funcs (func-called program)]
+
+
+        [rec-states (map (lambda (func)
+
+
+                           (find=tail-rec-of-func program func))
+
+
+                         funcs)])
+
+
+    (display &quot;函数调用列表(实际被调用了的函数,没被调用的函数不通过转换代码实现尾递归优化):\n=======\n&quot;)
+
+
+    (map (lambda (func)
+
+
+           (begin
+
+
+             (display func)
+
+
+             (newline)))
+
+
+         funcs)
+
+
+    (display &quot;=======\n&quot;)
+
+
+    (map (lambda (func answer)
+
+
+           (begin
+
+
+             (println &quot;--- 函数 &quot; func &quot; ---\n&quot;)
+
+
+             (if (equal? #t (car answer))
+
+
+                 (begin
+
+
+                   (println &quot;可以尾递归优化,在函数集 &quot; (cadr answer) &quot;中\n&quot;))
+
+
+                 (if (equal? #f (car answer))
+
+
+                     (println &quot;不可以尾递归优化\n&quot;)
+
+
+                     (begin
+
+
+                       (println &quot;不可以尾递归优化,依赖函数集 &quot; (cadr answer &quot;\n&quot;)))))))
+
+
+         funcs rec-states)
+
+
+    null))
+
+
+
+
+
+;; (display (func-called program))
+
+
+;; (newline)
+
+
+;; (define foo-def (get-proc-definition program &apos;foo))
+
+
+;; (define foo-body (get-body-of-proc-definition foo-def))
+
+
+;; (define foo-last-forms (get-last-exprs foo-body))
+
+
+;; (display foo-last-forms)
+
+
+;; (newline)
+
+
+
+
+
+;; (display (find-tail-rec-required-funcs &apos;foo program))
+
+
+;; (newline)
+
+
+
+
+
+;; (display (find-requirements-col &apos;foo program &apos;(foo) &apos;(foo)))  ;; =&gt; &apos;(#t (foo bar))
+
+
+
+
+
+(println (find-tail-rec program))
+</code></pre><p>代码在Racket下得执行结果如下:</p>
+<p><img src="http://zoowiipublicstore.qiniudn.com/tail-recur-recognization%E6%89%A7%E8%A1%8C%E7%BB%93%E6%9E%9C%E6%88%AA%E5%9B%BE.png" alt></p>
+<p>算法的具体描述看上面提到的博客.</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2014/05/07/一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/04/08/在Heroku上部署Clojure-worker程序/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">在Heroku上部署Clojure worker程序</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

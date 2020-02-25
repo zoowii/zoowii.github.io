@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>一个js的小玩具ring.js,类似Ring风格的一个web-framework | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前段时间一时兴起,弄了个新玩具,ring.js, 项目地址https://github.com/zoowii/ring.js 这是一个非常简陋的类似于Clojure的Ring库的node.js框架 使用Demo1234567891011121314151617181920212223242526function helloHandler(req, name) &amp;#123;    return &apos;h">
+<meta name="keywords" content="JavaScript">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一个js的小玩具ring.js,类似Ring风格的一个web-framework">
+<meta property="og:url" content="http://zoowii.com/2014/11/10/一个js的小玩具ring-js-类似Ring风格的一个web-framework/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="前段时间一时兴起,弄了个新玩具,ring.js, 项目地址https://github.com/zoowii/ring.js 这是一个非常简陋的类似于Clojure的Ring库的node.js框架 使用Demo1234567891011121314151617181920212223242526function helloHandler(req, name) &amp;#123;    return &apos;h">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.887Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一个js的小玩具ring.js,类似Ring风格的一个web-framework">
+<meta name="twitter:description" content="前段时间一时兴起,弄了个新玩具,ring.js, 项目地址https://github.com/zoowii/ring.js 这是一个非常简陋的类似于Clojure的Ring库的node.js框架 使用Demo1234567891011121314151617181920212223242526function helloHandler(req, name) &amp;#123;    return &apos;h">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-一个js的小玩具ring-js-类似Ring风格的一个web-framework" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      一个js的小玩具ring.js,类似Ring风格的一个web-framework
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/11/10/一个js的小玩具ring-js-类似Ring风格的一个web-framework/" class="article-date">
+  <time datetime="2014-11-09T16:00:00.000Z" itemprop="datePublished">2014-11-10</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>前段时间一时兴起,弄了个新玩具,ring.js, 项目地址<a href="https://github.com/zoowii/ring.js" target="_blank" rel="noopener">https://github.com/zoowii/ring.js</a></p>
+<p>这是一个非常简陋的类似于Clojure的Ring库的node.js框架</p>
+<h2 id="使用Demo"><a href="#使用Demo" class="headerlink" title="使用Demo"></a>使用Demo</h2><figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">function helloHandler(req, name) &#123;</span><br><span class="line">    return <span class="string">'hello, '</span> + name;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">function fileTestHandler(req, path) &#123;</span><br><span class="line">    return new ring.FileStream(<span class="string">'/Users/zoowii/SystemVersion.plist'</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">app = ringMiddlewares.routesMiddleware(app, defroutes(</span><br><span class="line">    <span class="builtin-name">GET</span>(<span class="string">'/'</span>, <span class="string">'index'</span>, <span class="string">'index'</span>),</span><br><span class="line">    <span class="builtin-name">GET</span>(<span class="string">'/hello/:name'</span>, helloHandler),</span><br><span class="line">    <span class="builtin-name">GET</span>(<span class="string">"/test/:id/update"</span>, <span class="string">"test-handler"</span>, <span class="string">"test"</span>),</span><br><span class="line">    <span class="builtin-name">GET</span>(<span class="string">'/test/file/:*path'</span>, fileTestHandler, <span class="string">'file-test'</span>),</span><br><span class="line">    context(<span class="string">"/user"</span>, [</span><br><span class="line">        <span class="builtin-name">GET</span>(<span class="string">"/:id/view/:project/:*path"</span>, <span class="string">"view_user_handler"</span>, <span class="string">"view_user"</span>),</span><br><span class="line">        POST(<span class="string">"/:id/view/:project/:*path"</span>, <span class="string">"update_user_handler"</span>, <span class="string">"update_user"</span>)</span><br><span class="line">    ]),</span><br><span class="line">    ANY(<span class="string">"/:*path"</span>, <span class="string">'404-handler'</span>, <span class="string">'404'</span>)</span><br><span class="line">));</span><br><span class="line">app = ringMiddlewares.resourceMiddleware(app, <span class="string">'/static'</span>, __dirname);</span><br><span class="line">var<span class="built_in"> server </span>= httpAdapter(app, &#123;</span><br><span class="line">    port: 3000</span><br><span class="line">&#125;);</span><br><span class="line">server.start(function () &#123;</span><br><span class="line">    console.log(<span class="string">'listening at http://127.0.0.1:3000'</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<h2 id="ring-js概念"><a href="#ring-js概念" class="headerlink" title="ring.js概念"></a>ring.js概念</h2><p>ring.js包括handler, middleware, adapter, request, response这些对象的概念</p>
+<h3 id="handler"><a href="#handler" class="headerlink" title="handler"></a>handler</h3><p>handler是一个接受request返回response的函数,整个ring.js的webapp就是一个handler</p>
+<h3 id="middleware"><a href="#middleware" class="headerlink" title="middleware"></a>middleware</h3><p>middleware是一个接受若干个handlers和options配置的函数,返回一个新的handler</p>
+<h3 id="adapter"><a href="#adapter" class="headerlink" title="adapter"></a>adapter</h3><p>adapter封装底层http库等协议,在adapter上可以运行ring.js的webapp,也就是handler. adapter是一个接受一个handler(暴露的ring.js webapp)和options的函数,options可以包括address, port等信息 当一个新请求到来时,adapter封装这个请求成一个request,交给参数中的handler,然后把返回的response作为http回复</p>
+<h3 id="request"><a href="#request" class="headerlink" title="request"></a>request</h3><p>request代表一个http请求,是一个javascript object,结构如下:</p>
+<figure class="highlight thrift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  server_port: (<span class="keyword">required</span>, int),</span><br><span class="line">  upgrade: (<span class="keyword">required</span>, boolean), <span class="comment">// true/false</span></span><br><span class="line">  server_name: (<span class="keyword">required</span>, <span class="built_in">string</span>),</span><br><span class="line">  remote_addr: (<span class="keyword">required</span>, <span class="built_in">string</span>), <span class="comment">// 请求发送方或者最后一层代理的地址</span></span><br><span class="line">  uri: (<span class="keyword">required</span>, <span class="built_in">string</span>), <span class="comment">// 请求uri, 以'/'开头</span></span><br><span class="line">  query_string: (<span class="keyword">optional</span>, <span class="keyword">map</span>),</span><br><span class="line">  scheme: (<span class="keyword">required</span>, <span class="built_in">string</span>), <span class="comment">// 传输协议,目前支持http和https, 转换成小写</span></span><br><span class="line">  http_version: (<span class="keyword">optional</span>, <span class="built_in">string</span>), <span class="comment">// http协议版本,比如1.1</span></span><br><span class="line">  request_method: (<span class="keyword">required</span>, <span class="built_in">string</span>), <span class="comment">// 请求方法, 转换成小写,包括get, post, head, put, delete等</span></span><br><span class="line">  content_type: (<span class="keyword">optional</span>, <span class="built_in">string</span>),</span><br><span class="line">  content_length: (<span class="keyword">optional</span>, int),</span><br><span class="line">  character_encoding: (<span class="keyword">optional</span>, <span class="built_in">string</span>), <span class="comment">// 用来转换request body的编码</span></span><br><span class="line">  ssl_client_cert: (<span class="keyword">optional</span>, <span class="built_in">byte</span>[]), <span class="comment">// 客户端SSL证书</span></span><br><span class="line">  headers: (<span class="keyword">required</span>, <span class="keyword">map</span>), <span class="comment">// http头信息, header name都转换成小写</span></span><br><span class="line">  body: (<span class="keyword">optional</span>, stream) <span class="comment">// http请求body</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="response"><a href="#response" class="headerlink" title="response"></a>response</h3><p>response代表一个http回复,是一个javascript object,或者是一个future对象,如果response是一个map,结构如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  status: (required, <span class="keyword">int</span>), <span class="comment">// &gt;= 100, http status code</span></span><br><span class="line">  headers: (required, <span class="built_in">map</span>), <span class="comment">// http回复的头信息</span></span><br><span class="line">  body: (optional, <span class="built_in">string</span>/其他对象的<span class="built_in">array</span>/iterator/file/stream/上面对象的<span class="built_in">future</span>, <span class="comment">// http回复的body</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果response是一个future对象,则监听这个future对象的data事件和end事件,获取到map形式的response chunk并输出</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/02/06/理解Spring-Framework框架原理和实现细节/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          理解Spring-Framework框架原理和实现细节
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/05/07/一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">一个将Chrome中打开的标签页都在Safari中打开的AppleScript脚本</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

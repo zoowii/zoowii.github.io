@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>bts2.0的智能资产(smartcoin)的机制 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="bts2.0中的智能资产(smartcoin)可以实现类似bitUSD,bitCNY这类和外界法币相对锚定的功能，主要实现机制是抵押+强制清算提供外部市场消除价差的动力。 bts 2.0的smartcoin。先创建好一种smartcoin，比如bitCNY，外部进行喂价 , 然后任何用户都可以通过抵押bts（比如超过1.75倍的bts)铸币这种智能资产，可以类比bts2.0系统为去中心化的央行，铸">
+<meta name="keywords" content="blockchain, bts, smartcoin">
+<meta property="og:type" content="article">
+<meta property="og:title" content="bts2.0的智能资产(smartcoin)的机制">
+<meta property="og:url" content="http://zoowii.com/2017/06/25/bts-smartcoin/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="bts2.0中的智能资产(smartcoin)可以实现类似bitUSD,bitCNY这类和外界法币相对锚定的功能，主要实现机制是抵押+强制清算提供外部市场消除价差的动力。 bts 2.0的smartcoin。先创建好一种smartcoin，比如bitCNY，外部进行喂价 , 然后任何用户都可以通过抵押bts（比如超过1.75倍的bts)铸币这种智能资产，可以类比bts2.0系统为去中心化的央行，铸">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.881Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="bts2.0的智能资产(smartcoin)的机制">
+<meta name="twitter:description" content="bts2.0中的智能资产(smartcoin)可以实现类似bitUSD,bitCNY这类和外界法币相对锚定的功能，主要实现机制是抵押+强制清算提供外部市场消除价差的动力。 bts 2.0的smartcoin。先创建好一种smartcoin，比如bitCNY，外部进行喂价 , 然后任何用户都可以通过抵押bts（比如超过1.75倍的bts)铸币这种智能资产，可以类比bts2.0系统为去中心化的央行，铸">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-bts-smartcoin" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      bts2.0的智能资产(smartcoin)的机制
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2017/06/25/bts-smartcoin/" class="article-date">
+  <time datetime="2017-06-24T17:33:04.000Z" itemprop="datePublished">2017-06-25</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>bts2.0中的智能资产(smartcoin)可以实现类似bitUSD,bitCNY这类和外界法币相对锚定的功能，主要实现机制是抵押+强制清算提供外部市场消除价差的动力。</p>
+<p>bts 2.0的smartcoin。先创建好一种smartcoin，比如bitCNY，外部进行喂价 , 然后任何用户都可以通过抵押bts（比如超过1.75倍的bts)铸币这种智能资产，可以类比bts2.0系统为去中心化的央行，铸币相当于资产负债表扩表，资产（抵押的bts)和负债（发行的bitcny)同时扩张。用户抵押bts铸币，相当于开了一个bitCNY的空单。</p>
+<p>bitcny 发行后，相当于一个有面值的债券，面值就是喂价的价格，任意用户可以任意时间强制清算bitcny，兑换成面值的bts，清算中，系统会按bitcny的所有空单中，从抵押率最低的空单还是强制清算，同时减少空单的bitcny负债和减少抵押品Bts。减少的抵押品bts交给清算bitcny的用户，清算是延后24小时并以24小时后的喂价自动执行无法取消的。  </p>
+<p>这个清算的过程就是bts系统的资产负债表缩表的过程。整个系统的bitcny的资产端（抵押品bts）和负债端（bitcny)同时缩小。因为有这个强制清算的过程，所以bitcny的价格会相对锚定在市场价格，因为如果系统内bitcny相对于bts的价格低于市场价，用户因为有清算bitcny兑换回Bts的选项，就有动力去买入bitcny然后清算，这个市场过程会减少价差，如果Bitcny相当于Bts的价格高于市场价，用户就有动力在交易卖出bts换为bitcny，然后强清bitcny兑换为更多的Bts，这个市场行为也会自然减少价差。 喂价的行为由比较可信的见证人用户执行（见证人得到大量投票，喂价作假确影响他们整体收益），按照共识计算出一个值，但是空单（抵押bts铸币bitcny)是强行平仓是根据喂价决定，而不是根据bts内部市场的买卖决定，当Bts价格剧烈波动时，有可能喂价远高于实际价格导致空单爆仓。</p>
+<p>bancor链的智能资产通过多准备金资产，以及允许按照共识自由申购赎回，也提供了给外部市场消除价差的动力（有利可图），不过bancor链的主要目的还是类似ETF给小众代币提供流动性</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/02/25/levelsql-design/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          一个关系数据库LevelSQL的设计和实现
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/04/13/dotnet-to-lua-bytecode/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">.Net字节码转换到Lua字节码的实现方式</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

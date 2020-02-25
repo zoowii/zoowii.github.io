@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Continuation的树结构与更新遍历查找算法 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="最近受朋友所托用Python把之前的f(env, cont)=(env2, cont2)的Scheme实现模型实现一下。在实现Continuation的数据结构时，因为没有进行CPS变换，所以需要找到下一个需要执行的form（这个form需要是list）作为调用continuation的next()的返回结果的一部分，然后这个form就是下一个要执行的form了。其实这个不断找到下一个要执行的f">
+<meta name="keywords" content="Scheme">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Continuation的树结构与更新遍历查找算法">
+<meta property="og:url" content="http://zoowii.com/2014/03/05/Continuation的树结构与更新遍历查找算法/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="最近受朋友所托用Python把之前的f(env, cont)=(env2, cont2)的Scheme实现模型实现一下。在实现Continuation的数据结构时，因为没有进行CPS变换，所以需要找到下一个需要执行的form（这个form需要是list）作为调用continuation的next()的返回结果的一部分，然后这个form就是下一个要执行的form了。其实这个不断找到下一个要执行的f">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.868Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Continuation的树结构与更新遍历查找算法">
+<meta name="twitter:description" content="最近受朋友所托用Python把之前的f(env, cont)=(env2, cont2)的Scheme实现模型实现一下。在实现Continuation的数据结构时，因为没有进行CPS变换，所以需要找到下一个需要执行的form（这个form需要是list）作为调用continuation的next()的返回结果的一部分，然后这个form就是下一个要执行的form了。其实这个不断找到下一个要执行的f">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Continuation的树结构与更新遍历查找算法" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Continuation的树结构与更新遍历查找算法
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/03/05/Continuation的树结构与更新遍历查找算法/" class="article-date">
+  <time datetime="2014-03-04T16:00:00.000Z" itemprop="datePublished">2014-03-05</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p> 最近受朋友所托用Python把之前的<code>f(env, cont)=(env2, cont2)</code>的Scheme实现模型实现一下。在实现Continuation的数据结构时，因为没有进行CPS变换，所以需要找到下一个需要执行的form（这个form需要是list）作为调用continuation的next()的返回结果的一部分，然后这个form就是下一个要执行的form了。其实这个不断找到下一个要执行的form，剩下的作为一个新的cont的过程，和CPS变换是一样的，都是找到当前要执行的过程，以及剩下要执行的cont，把后者当成前者类似回调一样的东西。这点就不多说了，本文说一下在实现这个cont的next()函数时，continuation的数据结构是怎样的。</p>
+<p>continuation大致是一个list，包含了很多元素，每个元素都可能是列表，然后可以嵌套包含，则也就是普通的lisp程序的结构（或者说是语法树）。同时continuation需要有一个position属性记录当前的位置，一个require属性（如果不为空的话）记录某个位置需要一个值来替换（比如call/cc时经常发生这个现象）。按照上文说的，continuation需要一个next()函数找到下一个要执行的form。既然是下一个要执行的，这个form就需要是元素都不是list(否则下一个要执行的就不是它而是它的那个列表的元素了)。也就是说form始终是一个list，其元素都不是list。而position就是记录上一个这样的form的位置，next()函数就是找到下一个这样的form的位置。</p>
+<p>说到这里很明显了，满满的即视感，树结构已经很明显了。next()函数返回的form就是非叶子节点中最低层次，所有子节点都是叶子节点的节点了。而next()函数就是在这样的目标节点中遍历。</p>
+<p>然后现在实现continuation就变成实现一个满足这个要求的多叉树而已了</p>
+<p>可以用一个索引数组记录position的值（require也可以这样记录），然后找到next()的目标节点（也就是新的position）也不难了。</p>
+<p>具体的以后再说。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2014/04/08/在Heroku上部署Clojure-worker程序/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          在Heroku上部署Clojure worker程序
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/03/03/easy-install-py-一个简单的Python的json序列号和反序列化库-同时记录第一次发布PyPi包/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">easy_install.py, 一个简单的Python的json序列号和反序列化库, 同时记录第一次发布PyPi包</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

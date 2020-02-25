@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>关于JavaScript的内存泄露检测 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="今天我遇到一个浏览器crash的问题，怀疑可能是JavaScript内存泄露了。然后网上搜了下，找到了Chrome中调试JavaScript内存泄露的方法 先打开Chrome开发者工具。以打开一个标签页为例。打开然后关闭此标签页一次，确保此标签页需要的资源都加载过了。然后进入开发者工具的Profiles标签页，选择Take Heap Snapshot，并Start。然后浏览器就会记录下当前页面的J">
+<meta name="keywords" content="Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于JavaScript的内存泄露检测">
+<meta property="og:url" content="http://zoowii.com/2013/11/20/关于JavaScript的内存泄露检测/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="今天我遇到一个浏览器crash的问题，怀疑可能是JavaScript内存泄露了。然后网上搜了下，找到了Chrome中调试JavaScript内存泄露的方法 先打开Chrome开发者工具。以打开一个标签页为例。打开然后关闭此标签页一次，确保此标签页需要的资源都加载过了。然后进入开发者工具的Profiles标签页，选择Take Heap Snapshot，并Start。然后浏览器就会记录下当前页面的J">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="http://zoowiistore.qiniudn.com/zoowii.github.io_blog.20131025-0001.png">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.893Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="关于JavaScript的内存泄露检测">
+<meta name="twitter:description" content="今天我遇到一个浏览器crash的问题，怀疑可能是JavaScript内存泄露了。然后网上搜了下，找到了Chrome中调试JavaScript内存泄露的方法 先打开Chrome开发者工具。以打开一个标签页为例。打开然后关闭此标签页一次，确保此标签页需要的资源都加载过了。然后进入开发者工具的Profiles标签页，选择Take Heap Snapshot，并Start。然后浏览器就会记录下当前页面的J">
+<meta name="twitter:image" content="http://zoowiistore.qiniudn.com/zoowii.github.io_blog.20131025-0001.png">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-关于JavaScript的内存泄露检测" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      关于JavaScript的内存泄露检测
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/11/20/关于JavaScript的内存泄露检测/" class="article-date">
+  <time datetime="2013-11-19T16:00:00.000Z" itemprop="datePublished">2013-11-20</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>今天我遇到一个浏览器crash的问题，怀疑可能是JavaScript内存泄露了。然后网上搜了下，找到了Chrome中调试JavaScript内存泄露的方法</p>
+<p>先打开Chrome开发者工具。以打开一个标签页为例。打开然后关闭此标签页一次，确保此标签页需要的资源都加载过了。然后进入开发者工具的Profiles标签页，选择Take Heap Snapshot，并Start。然后浏览器就会记录下当前页面的JavaScript所有对象的快照。然后再次打开关闭上述标签页，然后重复捕获JavaScript对象快照一次.此时可以看到如下图：</p>
+<p><img src="http://zoowiistore.qiniudn.com/zoowii.github.io_blog.20131025-0001.png" alt></p>
+<p>注意到最下面有个Summary，选择Comparison，就可以看到Snapshots的增量变化了。内存泄露注意看Constructor中的closue的数量变化和内容就好，看看有多少对象没有释放，以及对应的代码。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2013/11/29/怎样让windows命令行程序在后台启动/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          怎样让windows命令行程序在后台启动
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/11/18/使用jdbc向MySQL数据库插入大量数据/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">使用jdbc向MySQL数据库插入大量数据</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

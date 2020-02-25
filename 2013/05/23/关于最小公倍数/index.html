@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>关于最小公倍数 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="求最大公约数的算法众所周知，使用辗转取余法（辗转相除法） 但怎么求n个数的最小公倍数呢， 常规解法有两种， 一种是质因数分解，设每个出现过的质因数 p[i]所出现的最大次数为a[i]，则把所有Math.pow(p[i], a[i[)相乘即可，不过这种方法局限于 正整数 还有一种是假设两数分别为a, b，求出最大公约数gcd[0], a[1] = a/gcd[0], b[1] = b/gcd[0]">
+<meta name="keywords" content="算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于最小公倍数">
+<meta property="og:url" content="http://zoowii.com/2013/05/23/关于最小公倍数/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="求最大公约数的算法众所周知，使用辗转取余法（辗转相除法） 但怎么求n个数的最小公倍数呢， 常规解法有两种， 一种是质因数分解，设每个出现过的质因数 p[i]所出现的最大次数为a[i]，则把所有Math.pow(p[i], a[i[)相乘即可，不过这种方法局限于 正整数 还有一种是假设两数分别为a, b，求出最大公约数gcd[0], a[1] = a/gcd[0], b[1] = b/gcd[0]">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.899Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="关于最小公倍数">
+<meta name="twitter:description" content="求最大公约数的算法众所周知，使用辗转取余法（辗转相除法） 但怎么求n个数的最小公倍数呢， 常规解法有两种， 一种是质因数分解，设每个出现过的质因数 p[i]所出现的最大次数为a[i]，则把所有Math.pow(p[i], a[i[)相乘即可，不过这种方法局限于 正整数 还有一种是假设两数分别为a, b，求出最大公约数gcd[0], a[1] = a/gcd[0], b[1] = b/gcd[0]">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-关于最小公倍数" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      关于最小公倍数
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/05/23/关于最小公倍数/" class="article-date">
+  <time datetime="2013-05-22T16:00:00.000Z" itemprop="datePublished">2013-05-23</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>求最大公约数的算法众所周知，使用辗转取余法（辗转相除法）</p>
+<p>但怎么求n个数的最小公倍数呢，</p>
+<p>常规解法有两种，</p>
+<p>一种是质因数分解，设每个出现过的质因数 p[i]所出现的最大次数为a[i]，则把所有Math.pow(p[i], a[i[)相乘即可，不过这种方法局限于</p>
+<p>正整数</p>
+<p>还有一种是假设两数分别为a, b，求出最大公约数gcd[0], a[1] = a/gcd[0], b[1] = b/gcd[0] ，再把a[i], b[i]这样处理直到a[i], b[i]互质为止，这是把所有的gcd[k] (k</p>
+<pre><code>(defn lcm [&amp; nums]
+  (let [index-of (fn [v l] 
+    (loop [i 0] 
+      ; get the index of value v in sequence l. assume v is in l
+      (if (= (nth l i) v)
+        i 
+        (recur (inc i)))) ) 
+    lcm-help (fn [now-nums origin-nums]
+                (if (apply = now-nums)
+                  (first now-nums)
+                  (let [min-value (apply min now-nums)
+                        min-value-index (index-of min-value now-nums)
+                        origin-val (nth origin-nums min-value-index)
+                        new-val (+ min-value origin-val)
+                        now-nums-vector (vec now-nums)
+                        new-now-nums-vector (assoc now-nums-vector 
+                                              min-value-index new-val)
+                        new-now-nums (seq new-now-nums-vector)]
+                    (recur new-now-nums origin-nums))))]
+      (lcm-help nums nums)))
+
+(println (lcm 7 5/7 2 3/5))
+(println (lcm 3/4 1/6))
+</code></pre><p>输出结果为210, 3/2</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2013/08/22/简单的工作流引擎的设计/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          简单的工作流引擎的设计
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/02/20/PHP与Java中运行时获取调用类方法（静态方法）的类名的方法/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">PHP与Java中运行时获取调用类方法（静态方法）的类名的方法</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

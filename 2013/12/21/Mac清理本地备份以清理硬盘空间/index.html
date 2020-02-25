@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Mac清理本地备份以清理硬盘空间 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="mac os x有个很贴心的功能，Time Machine，功能很强大，使用很方便。我一向是外接一个移动硬盘，在连接的时候自动备份的。同时Mac OS X除了外部硬盘自动备份，本地也会同时建立快照，虽然在硬盘空间不够时会自动合并多个日期的备份成一周，一月的，但有时候看到关于本机中备份占了那么大空间还是不爽啊，特别是对本人Macbook Air只有128G空间。所以网上搜了下方法。 找到的最简单的方">
+<meta name="keywords" content="Mac">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mac清理本地备份以清理硬盘空间">
+<meta property="og:url" content="http://zoowii.com/2013/12/21/Mac清理本地备份以清理硬盘空间/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="mac os x有个很贴心的功能，Time Machine，功能很强大，使用很方便。我一向是外接一个移动硬盘，在连接的时候自动备份的。同时Mac OS X除了外部硬盘自动备份，本地也会同时建立快照，虽然在硬盘空间不够时会自动合并多个日期的备份成一周，一月的，但有时候看到关于本机中备份占了那么大空间还是不爽啊，特别是对本人Macbook Air只有128G空间。所以网上搜了下方法。 找到的最简单的方">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.872Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Mac清理本地备份以清理硬盘空间">
+<meta name="twitter:description" content="mac os x有个很贴心的功能，Time Machine，功能很强大，使用很方便。我一向是外接一个移动硬盘，在连接的时候自动备份的。同时Mac OS X除了外部硬盘自动备份，本地也会同时建立快照，虽然在硬盘空间不够时会自动合并多个日期的备份成一周，一月的，但有时候看到关于本机中备份占了那么大空间还是不爽啊，特别是对本人Macbook Air只有128G空间。所以网上搜了下方法。 找到的最简单的方">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Mac清理本地备份以清理硬盘空间" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Mac清理本地备份以清理硬盘空间
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/12/21/Mac清理本地备份以清理硬盘空间/" class="article-date">
+  <time datetime="2013-12-20T16:11:53.000Z" itemprop="datePublished">2013-12-21</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>mac os x有个很贴心的功能，Time Machine，功能很强大，使用很方便。我一向是外接一个移动硬盘，在连接的时候自动备份的。同时Mac OS X除了外部硬盘自动备份，本地也会同时建立快照，虽然在硬盘空间不够时会自动合并多个日期的备份成一周，一月的，但有时候看到关于本机中备份占了那么大空间还是不爽啊，特别是对本人Macbook Air只有128G空间。所以网上搜了下方法。</p>
+<p>找到的最简单的方法就是先关闭本地快照，然后再重新启用（或者干脆就一直关掉了）</p>
+<pre><code>sudo tmutil disablelocal 禁用本地快照，同时本地快照会被清空
+sudo tmutil enablelocal重新启用本地快照
+</code></pre>
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2013/12/21/XML文档安全查询的几种方法概述/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          XML文档安全查询的几种方法概述
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/12/21/浅谈尾递归的定义和判定方法/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">浅谈尾递归的定义和判定方法</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

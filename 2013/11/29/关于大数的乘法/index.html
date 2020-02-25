@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>关于大数的乘法 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="关于计算两个非常大的数字的乘法（求解大数的n次方，浮点数的高精度的乘法或幂都可以归类到这个问题）的方法，经常可以见到。今天我又一次看到这道题，所以这里就将我想到的方法记录下来，以备将来使用。 首先，回顾一下常见的普通大小的整数乘法，我们人肉计算是竖式计算的方式，这种方式也可以看做将两个乘数都分成一位位的，然后分别相乘计算，也就是 x = abcdef y = mnpqrs x * y = (abc">
+<meta name="keywords" content="算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="关于大数的乘法">
+<meta property="og:url" content="http://zoowii.com/2013/11/29/关于大数的乘法/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="关于计算两个非常大的数字的乘法（求解大数的n次方，浮点数的高精度的乘法或幂都可以归类到这个问题）的方法，经常可以见到。今天我又一次看到这道题，所以这里就将我想到的方法记录下来，以备将来使用。 首先，回顾一下常见的普通大小的整数乘法，我们人肉计算是竖式计算的方式，这种方式也可以看做将两个乘数都分成一位位的，然后分别相乘计算，也就是 x = abcdef y = mnpqrs x * y = (abc">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.896Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="关于大数的乘法">
+<meta name="twitter:description" content="关于计算两个非常大的数字的乘法（求解大数的n次方，浮点数的高精度的乘法或幂都可以归类到这个问题）的方法，经常可以见到。今天我又一次看到这道题，所以这里就将我想到的方法记录下来，以备将来使用。 首先，回顾一下常见的普通大小的整数乘法，我们人肉计算是竖式计算的方式，这种方式也可以看做将两个乘数都分成一位位的，然后分别相乘计算，也就是 x = abcdef y = mnpqrs x * y = (abc">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-关于大数的乘法" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      关于大数的乘法
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/11/29/关于大数的乘法/" class="article-date">
+  <time datetime="2013-11-28T16:09:56.000Z" itemprop="datePublished">2013-11-29</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>关于计算两个非常大的数字的乘法（求解大数的n次方，浮点数的高精度的乘法或幂都可以归类到这个问题）的方法，经常可以见到。今天我又一次看到这道题，所以这里就将我想到的方法记录下来，以备将来使用。</p>
+<p>首先，回顾一下常见的普通大小的整数乘法，我们人肉计算是竖式计算的方式，这种方式也可以看做将两个乘数都分成一位位的，然后分别相乘计算，也就是</p>
+<pre><code>x = abcdef
+y = mnpqrs
+x * y = (abcdef) * (mnpqrs)
+      = （a*10^5+b*10^4+...+f） * (m*10^5+n*10^4+...+s)
+      = ....(这一步就是竖式的一位位的计算)
+</code></pre><p>然后我们再来想想大数于普通int型数的不同是什么？</p>
+<p>以下表示大数的方法简单的以10进制字符串的形式表示和存储，其他存储方式可能也可以。（比如2进制可能更合适，但十进制在手写时比较直观）</p>
+<p>如果大数以0结尾，可以先分解成x*10^k，用x计算后，尾部加上k个0即可。以下会有一些乘以10^k的地方，使用这种方法计算就可以很简单的实现。</p>
+<p>int 型的计算是分成长度个1位数*10^k的和，然后拆开计算求和。int型整数(32bit)之所以方便被计算机计算的原因就是分成的位数(10进制，最多10位）足够小，在内存中方便直接存储。反过来也就是大数（比如一个长100的10进制整数）如果按一位位的10进制基本单元来算的话，分成的单元个数太多，不好直接计算。</p>
+<p>那怎么解决这个问题呢？很简单，不要一位位的分，而是一个单元许多位的分，或者不要按10进制计算，按一亿进制计算（举例）</p>
+<p>本篇文章暂时只考虑第一种方法，即将一个大数x分成若干个单元，每个单元有若干位，使得分成的单元个数足够小到方便计算机计算。</p>
+<p>为简单起见，假设每次分成2个单元，尽量均分，即将10进制显示的字符串长度为n的大数x分成前一半长度[n/2]位的数a*10^(n-[n/2])和后一半长度(n-[n/2])位的数b。</p>
+<p>也就是</p>
+<pre><code>x = a*10^(n-[n/2]) + b
+</code></pre><p>a 和 b的长度都是x的一半左右（如果x的长度足够小，比如小于10，在int范围内，则a = 0, x = b）</p>
+<p>另一个乘数是长度m的大数y,可以同样分解成 y = c*10^(m-[m/2]) + d</p>
+<p>然后 x * y 就可以分解成几个长度差不多缩小一半的数（或大数）的乘积的和了。</p>
+<p>如果分解出的单元的乘法依然是大数乘法，用同样方法递归到长度足够小为止即可。</p>
+<p>接下来只剩下一个问题了，就是上面计算了分解单元的大数和后，还要将他们加起来，这就是大数求和问题了。</p>
+<p>大数求和这个问题很简单，只要把大数x按10进制位的int/short的数组形式存储，数组长度就是大数的10进制字符串的长度即可。大数相加只要将两个数组逐位相加并考虑进位即可，（负数，大数相减的问题差不多，使用同样方式）。</p>
+<p>至此，大数相乘的问题就解决了。</p>
+<p>关于代码实现，之后会加上。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2013/12/20/JavaScript的事件机制和执行队列的一个小验证/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          JavaScript的事件机制和执行队列的一个小验证
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/11/29/怎样让windows命令行程序在后台启动/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">怎样让windows命令行程序在后台启动</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

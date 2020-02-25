@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="专业闭关三十年">
+<meta property="og:url" content="http://zoowii.com/page/2/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:locale" content="default">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="专业闭关三十年">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-Scheme实现的通用尾递归识别算法的demo实现-终于想到来些-拖延症" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/05/04/Scheme实现的通用尾递归识别算法的demo实现-终于想到来些-拖延症/">Scheme实现的通用尾递归识别算法的demo实现,终于想到来些,拖延症...</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/05/04/Scheme实现的通用尾递归识别算法的demo实现-终于想到来些-拖延症/" class="article-date">
+  <time datetime="2014-05-03T16:00:00.000Z" itemprop="datePublished">2014-05-04</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>几个月前,我有写过一篇博客, <a href="/2013/12/21/浅谈尾递归的定义和判定方法/">/2013/12/21/浅谈尾递归的定义和判定方法/</a> ,描述了一种用来识别简单和复杂尾递归的通用算法,后来还写了一篇博客描述了尾递归优化算法使用代码变换方式的一种实现算法(通过另外的基于continuation的计算模型也可以直接实现尾递归优化,因为那样没有了栈机制), 之后我一直想写代码去具体实现,终于,今天晚上QQ群灌水到没人在线时我打算来写一下了.</p>
+<p>今天晚上只写了尾递归的识别算法的实现,而且没有做什么测试,写得匆忙,加上最近用Clojure,已经忘了scheme API怎么用了,所以,代码质量和鲁棒性不敢恭维,有问题看上面博客吧.</p>
+<p>Github项目: <a href="https://github.com/zoowii/tail-rec-optimization" target="_blank" rel="noopener">https://github.com/zoowii/tail-rec-optimization</a></p>
+<p>先直接上代码(<a href="https://gist.github.com/zoowii/6932942e8661f8544ee3" target="_blank" rel="noopener">https://gist.github.com/zoowii/6932942e8661f8544ee3</a>)</p>
+<pre><code># lang racket
+;; 这里是示例代码，这段代码在Scheme中是可以执行的，因为Scheme标准规定了需要尾递归优化
+
+
+;; 而对应的JavaScript代码是无法运行的，因为没有做尾递归优化，很快就超过最大调用深度了
+
+
+(define (foo n)
+
+
+ (if (&gt; n 20140000)
+
+
+    (begin
+
+
+      (display &quot;foo&quot;)
+
+
+       n)
+
+
+    (bar (+ n 1))))
+
+
+(define (bar n)
+
+
+  (if (&gt; n 20130000)
+
+
+     (begin
+
+
+        (display &quot;bar&quot;)
+
+
+         n)
+
+
+     (foo (+ n 2))))
+
+
+(display (foo 1234))
+
+
+
+
+
+;; 下面开始实际程序
+
+
+(define call/cc call-with-current-continuation)
+
+
+
+
+
+;; 这里是上面的示例代码，program就是实际使用中的程序代码（宏展开后）
+
+
+(define program &apos;((define (foo n)
+
+
+ (if (&gt; n 20140000)
+
+
+    (begin
+
+
+      (display &quot;foo&quot;)
+
+
+       n)
+
+
+    (bar (+ n 1))))
+
+
+(define (bar n)
+
+
+  (if (&gt; n 20130000)
+
+
+     (begin
+
+
+        (display &quot;bar&quot;)
+
+
+         n)
+
+
+     (foo (+ n 2))))
+
+
+(foo 1234) ; 这里没有加上display，是为了方便程序找到这个需要尾递归优化的函数foo
+
+
+  ))
+
+
+
+
+
+(define (id form)
+
+
+  ;; 辅助函数，一个返回参数自身的函数
+
+
+  form)
+
+
+
+
+
+(define (procedure-definition? form)
+
+
+  ;; 判断一个form是不是一个函数定义
+
+
+  (if (and (list? form)
+
+
+           (&gt; (length form) 2)
+
+
+           (eq? (car form) &apos;define)
+
+
+           (list? (cadr form))
+
+
+           (&gt; (length (cadr form)) 1)
+
+
+           )
+
+
+      #t
+
+
+      #f))
+
+
+
+
+
+(define (find-procedure-definitions program)
+
+
+  ;; 找到一段程序中所有的函数定义的名称
+
+
+  (filter id
+
+
+          (map (lambda (form)
+
+
+                 (if (procedure-definition? form)
+
+
+                     (caadr form)
+
+
+                     #f))
+
+
+               program)))
+
+
+
+
+
+(define (name-of-proc-definition proc-definition)
+
+
+  ;; 在一个函数定义的代码中获取函数名称
+
+
+  (caadr proc-definition))
+
+
+
+
+
+(define (find-func-calls program)
+
+
+  ;; 找到一段程序中除了函数定义之外的函数调用，比如(foo 1234)
+
+
+  (filter id
+
+
+          (map (lambda (form)
+
+
+                 (if (procedure-definition? form)
+
+
+                     #f
+
+
+                     form)) program)))
+
+
+
+
+
+(define (func-called program)
+
+
+  ;; 找到一段程序中所有顶层被调用的函数,除了函数定义这类special form
+
+
+  (map (lambda (form) (car form))
+
+
+       (find-func-calls program)))
+
+
+
+
+
+(define (get-proc-definition program func)
+
+
+  ;; 在一段程序中找到某个函数的定义代码
+
+
+  (let ([procs (filter (lambda (f)
+
+
+                        (equal? (name-of-proc-definition f)
+
+
+                           func))
+
+
+                      (filter procedure-definition?
+
+
+                              program))])
+
+
+    (car procs)))
+
+
+
+
+
+(define (merge cols)
+
+
+  ;; 合并一组列表
+
+
+  (if (empty? cols)
+
+
+      &apos;()
+
+
+      (let ([l1 (car cols)]
+
+
+            [ll (cdr cols)])
+
+
+        (if (empty? l1)
+
+
+            (merge ll)
+
+
+            (cons (car l1)
+
+
+                  (merge (cons (cdr l1) ll)))))))
+
+
+
+
+
+(define (get-last-exprs forms)
+
+
+  ;; 获取一个form集合中所有可能最后执行的form
+
+
+  (merge
+
+
+   (map (lambda (form)
+
+
+         (cond  ;; 目前只考虑if和begin两种结构化,因为只是demo,如果是具体的编译器/解释器,自行获取最后可能执行的form
+
+
+           [(not (list? form))
+
+
+            (list form)]
+
+
+           [(equal? &apos;if (car form))
+
+
+            (if (&gt; (length form) 3)
+
+
+                (get-last-exprs (list (caddr form)
+
+
+                      (cadddr form)))
+
+
+                (get-last-exprs (list (caddr form))))]
+
+
+           [(equal? &apos;begin (car form))
+
+
+            (get-last-exprs (list (last form)))]
+
+
+           [#t (list form)]))
+
+
+       forms)))
+
+
+
+
+
+(define (get-body-of-proc-definition proc-definition)
+
+
+  ;; 获取一个函数定义代码段中的body部分
+
+
+  (cddr proc-definition))
+
+
+
+
+
+(define (base? form)
+
+
+  ;; 判断一个form是否是基本类型,比如数值,字符串,布尔值,符号symbol
+
+
+  ;; 也就是是否不是list
+
+
+  (not (list? form)))
+
+
+
+
+
+;;; 要记住在一个函数在一个函数集中尾递归依赖的函数
+
+
+(define (find-tail-rec-required-funcs func program)
+
+
+  ;; 找到一个函数的尾递归依赖的函数集(就是尾部调用的函数,没有地柜调用)
+
+
+  ;; 没有考虑更复杂的词法作用域,匿名函数等,这些由具体编译器/解释器的实现来判断
+
+
+  (let* ([func-body (get-body-of-proc-definition
+
+
+                    (get-proc-definition program func))]
+
+
+        [last-exprs (get-last-exprs func-body)]
+
+
+        [last-exprs-requirements (map
+
+
+                                  (lambda (form)
+
+
+                                    (if (base? form)
+
+
+                                        #t
+
+
+                                        (let ([item1 (car form)])
+
+
+                                          (if (list? item1)
+
+
+                                              #f
+
+
+                                              item1))))
+
+
+                                  last-exprs)])
+
+
+    last-exprs-requirements))
+
+
+
+
+
+(define (into-set item col)
+
+
+  ;; 在一个集合中添加一项,如果这个值已经存在,则不添加(也就是当做set)处理
+
+
+  (if (member item col)
+
+
+      col
+
+
+      (cons item col)))
+
+
+
+
+
+(define (sub-set col1 col2)
+
+
+  ;; 判断col1是否是col2的子集
+
+
+  (let* ([diff (filter (lambda (x)
+
+
+                         (not (member x col2)))
+
+
+                       col1)])
+
+
+    (empty? diff)))
+
+
+
+
+
+(define (find-requirements-col func program col C-col)
+
+
+  ;; 在一个集合中找到依赖函数集
+
+
+  ;; 过程就是找到尾部依赖的内容,进行判断,如果是一个函数调用,判断这个函数是否已经加入到col中,以及其他判断和操作
+
+
+  ;; 如果不是尾递归的,返回#f, 如果是尾递归的, 返回#t, 如果依赖一个函数集,返回这个函数集
+
+
+  ;; C-col记录依赖集的作用范围, col记录依赖的函数
+
+
+  (let* ([last-exprs (find-tail-rec-required-funcs func program)])
+
+
+    (if (member #f last-exprs)
+
+
+        (list #f C-col)
+
+
+        (let* ([exprs (filter (lambda (x) (and (not (boolean? x))
+
+
+                                              (not (member x col))
+
+
+                                              (not (equal? x func))))
+
+
+                              last-exprs)]
+
+
+               [new-col (merge (list col))]
+
+
+               [C-col (merge (list col exprs))]
+
+
+               [exprs-require (map (lambda (x)
+
+
+                                     (find-requirements-col x program new-col C-col))
+
+
+                                   exprs)]
+
+
+               [exprs-require (filter (lambda (x)
+
+
+                                        (not (boolean? x)))
+
+
+                                      (map car exprs-require))])
+
+
+          (if (empty? exprs)
+
+
+              (list #t C-col)
+
+
+              (if (member #f exprs-require)
+
+
+              (list #f C-col)
+
+
+              (let* ([exprs-require (filter (lambda (rs)
+
+
+                                           (not (sub-set rs new-col)))
+
+
+                                         exprs-require)]
+
+
+                     [new-col (merge (list (merge exprs-require) new-col))])
+
+
+                (if (and (= 1 (length new-col))
+
+
+                         (equal? func (car new-col)))
+
+
+                    (list #t C-col)
+
+
+                    (list new-col C-col)))))))))
+
+
+
+
+
+(define (find=tail-rec-of-func program func)
+
+
+  ;; 在一段程序中判断函数func是否是尾递归的,
+
+
+  ;; 如果是,返回使尾递归成立的最小函数集合(范围),
+
+
+  ;; 否则,返回nil
+
+
+  (find-requirements-col func program (list func) (list func)))
+
+
+
+
+
+(define (println . args)
+
+
+  (begin
+
+
+    (map (lambda (x) (display x)) args)
+
+
+    null))
+
+
+
+
+
+(define (find-tail-rec program)
+
+
+  ;; 找到一段程序中的所有尾递归
+
+
+  ;; 目前为了简单起见，而且demo代码中顶层只有一个函数调用(foo 1234)。所以只考虑最后一个函数调用，作为要判断尾递归优化的目标
+
+
+  (let* ([funcs (func-called program)]
+
+
+        [rec-states (map (lambda (func)
+
+
+                           (find=tail-rec-of-func program func))
+
+
+                         funcs)])
+
+
+    (display &quot;函数调用列表(实际被调用了的函数,没被调用的函数不通过转换代码实现尾递归优化):\n=======\n&quot;)
+
+
+    (map (lambda (func)
+
+
+           (begin
+
+
+             (display func)
+
+
+             (newline)))
+
+
+         funcs)
+
+
+    (display &quot;=======\n&quot;)
+
+
+    (map (lambda (func answer)
+
+
+           (begin
+
+
+             (println &quot;--- 函数 &quot; func &quot; ---\n&quot;)
+
+
+             (if (equal? #t (car answer))
+
+
+                 (begin
+
+
+                   (println &quot;可以尾递归优化,在函数集 &quot; (cadr answer) &quot;中\n&quot;))
+
+
+                 (if (equal? #f (car answer))
+
+
+                     (println &quot;不可以尾递归优化\n&quot;)
+
+
+                     (begin
+
+
+                       (println &quot;不可以尾递归优化,依赖函数集 &quot; (cadr answer &quot;\n&quot;)))))))
+
+
+         funcs rec-states)
+
+
+    null))
+
+
+
+
+
+;; (display (func-called program))
+
+
+;; (newline)
+
+
+;; (define foo-def (get-proc-definition program &apos;foo))
+
+
+;; (define foo-body (get-body-of-proc-definition foo-def))
+
+
+;; (define foo-last-forms (get-last-exprs foo-body))
+
+
+;; (display foo-last-forms)
+
+
+;; (newline)
+
+
+
+
+
+;; (display (find-tail-rec-required-funcs &apos;foo program))
+
+
+;; (newline)
+
+
+
+
+
+;; (display (find-requirements-col &apos;foo program &apos;(foo) &apos;(foo)))  ;; =&gt; &apos;(#t (foo bar))
+
+
+
+
+
+(println (find-tail-rec program))
+</code></pre><p>代码在Racket下得执行结果如下:</p>
+<p><img src="http://zoowiipublicstore.qiniudn.com/tail-recur-recognization%E6%89%A7%E8%A1%8C%E7%BB%93%E6%9E%9C%E6%88%AA%E5%9B%BE.png" alt></p>
+<p>算法的具体描述看上面提到的博客.</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-在Heroku上部署Clojure-worker程序" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/04/08/在Heroku上部署Clojure-worker程序/">在Heroku上部署Clojure worker程序</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/04/08/在Heroku上部署Clojure-worker程序/" class="article-date">
+  <time datetime="2014-04-07T16:00:00.000Z" itemprop="datePublished">2014-04-08</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>前几天想起Heroku上可以有worker程序，可以部署在后台一直运行的程序，而不是只可以部署web网站，真好VPS上跑的程序已经够多了，就把一个Clojure写的小程序部署上去了。</p>
+<p>在部署这个Clojure程序中，有一些要注意的问题，特此记录。</p>
+<p>首先就是，再Clojure项目的Leiningen的project.clj中，需要加入:main 指向起始函数-main所在的Clojure namespace，同时这个clojure namespace需要在ns定义处加上:gen-class限定(起始不一定是-main函数，可以给:gen-class传递参数指定函数前缀，默认是’-‘，会对应生成的Java类中的不带前缀的方法)。其实这不属于和Heroku部署特定相关的，而是所有Leiningen项目打包成可启动jar程序都要做的事。</p>
+<p>第二点是，再project.clj中显示指定:uberjar-name指定打包成的jar包名称，方便在Procfile中指定路径，另外还要显示指定:min-lein-version 为”2.0.0”（或者更高），这是因为我使用了Lein 2，而Heroku默认的Lein版本不是，不指定会启动失败</p>
+<p>第三点，我开始也没发现错误原因，是再看heroku logs的时候才发现的，直接按上面步骤再git push部署后，heroku logs中会报版本错误，这是因为Heroku现在默认是使用Java 6，而我项目中依赖Java 7，所以也需要显示指定Java版本，返回就是在项目根目录下新建一个名为system.properties的文本文件，内容是 java.runtime.version=1.7</p>
+<p>到这一步就差不多了，然后就可以git push部署了。</p>
+<p>之后还有一个小问题，也许你会发现git push后的程序无法执行，这是因为再Heroku Apps中的你这个应用的配置还是使用的web role数量为1，worker role数量为0，没有worker role当然无法运行了。所以只需要再Heroku管理界面中将web role设为0，worker role设为1即可。</p>
+<p>完成。</p>
+<p>感慨一下，Heroku实在是一个很好的PaaS平台，开发和部署都非常方便，文档也很不错，也不像GAE和SAE那样限制多多。最赞的是支持worker role。</p>
+<p>可惜在天朝速度实在太慢，好在worker role不在乎这点</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Continuation的树结构与更新遍历查找算法" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/03/05/Continuation的树结构与更新遍历查找算法/">Continuation的树结构与更新遍历查找算法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/03/05/Continuation的树结构与更新遍历查找算法/" class="article-date">
+  <time datetime="2014-03-04T16:00:00.000Z" itemprop="datePublished">2014-03-05</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p> 最近受朋友所托用Python把之前的<code>f(env, cont)=(env2, cont2)</code>的Scheme实现模型实现一下。在实现Continuation的数据结构时，因为没有进行CPS变换，所以需要找到下一个需要执行的form（这个form需要是list）作为调用continuation的next()的返回结果的一部分，然后这个form就是下一个要执行的form了。其实这个不断找到下一个要执行的form，剩下的作为一个新的cont的过程，和CPS变换是一样的，都是找到当前要执行的过程，以及剩下要执行的cont，把后者当成前者类似回调一样的东西。这点就不多说了，本文说一下在实现这个cont的next()函数时，continuation的数据结构是怎样的。</p>
+<p>continuation大致是一个list，包含了很多元素，每个元素都可能是列表，然后可以嵌套包含，则也就是普通的lisp程序的结构（或者说是语法树）。同时continuation需要有一个position属性记录当前的位置，一个require属性（如果不为空的话）记录某个位置需要一个值来替换（比如call/cc时经常发生这个现象）。按照上文说的，continuation需要一个next()函数找到下一个要执行的form。既然是下一个要执行的，这个form就需要是元素都不是list(否则下一个要执行的就不是它而是它的那个列表的元素了)。也就是说form始终是一个list，其元素都不是list。而position就是记录上一个这样的form的位置，next()函数就是找到下一个这样的form的位置。</p>
+<p>说到这里很明显了，满满的即视感，树结构已经很明显了。next()函数返回的form就是非叶子节点中最低层次，所有子节点都是叶子节点的节点了。而next()函数就是在这样的目标节点中遍历。</p>
+<p>然后现在实现continuation就变成实现一个满足这个要求的多叉树而已了</p>
+<p>可以用一个索引数组记录position的值（require也可以这样记录），然后找到next()的目标节点（也就是新的position）也不难了。</p>
+<p>具体的以后再说。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-easy-install-py-一个简单的Python的json序列号和反序列化库-同时记录第一次发布PyPi包" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/03/03/easy-install-py-一个简单的Python的json序列号和反序列化库-同时记录第一次发布PyPi包/">easy_install.py, 一个简单的Python的json序列号和反序列化库, 同时记录第一次发布PyPi包</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/03/03/easy-install-py-一个简单的Python的json序列号和反序列化库-同时记录第一次发布PyPi包/" class="article-date">
+  <time datetime="2014-03-02T16:00:00.000Z" itemprop="datePublished">2014-03-03</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这两天因为一个很小的项目，又把有段时间没用的Django捡起来了</p>
+<p>虽然Django让很多有洁癖的Pythonist很不爽，但是Django最大的优点也差不多是仅剩的优点就是强大的管理后台自动生成功能。对一些web前端界面不重要甚至根本没有的项目，这个优点很好很强大。</p>
+<p>因为需求关系，需要将Django数据库查询的结果json化输出，所以又翻了下Python的json库。</p>
+<p>不过因为Django的ORM是紧耦合的，使用Django自带的django.core.serializers来序列化产生的格式也不适合，找了一下也没找到方便自定义的方法。使用Python的json库使用起来也繁琐不方便，需要定义一个有点复杂的serializer函数并且和Django的ORM一起用有点不适应。也因为我的需求比较简单，觉得做一个满足自己需求的json包是很简单的事情，所以就动笔写了。</p>
+<p>项目名称easy_json.py</p>
+<p>写好后其实没几行代码，但是在我的使用场景中比json.dumps和Django自带的json库方便太多了，所以打算放到PyPi上共享。其实这才是本文的主题，记录我第一次发布Python包到PyPi上 :)</p>
+<p>根据网上找的和我自己实践的结果，需要先在项目目录下新建一个setup.py文件，里面的结构大致如下：</p>
+<pre><code>from setuptools import setup, find_packages
+
+setup(
+    name=&apos;easy_json&apos;,
+    version=&apos;0.0.1&apos;,
+    keywords=(&apos;json&apos;, &apos;easy_json&apos;, &apos;simple&apos;, &apos;Django&apos;),
+    description=&apos;a python json serialize/deserialize library which is easy to use&apos;,
+    license=&apos;MIT License&apos;,
+    install_requires=[],
+    author=&apos;zoowii&apos;,
+    author_email=&apos;1992zhouwei@gmail.com&apos;,
+    packages=find_packages(),
+    platforms=&apos;any&apos;,
+)
+</code></pre><p>注意不能随便增加属性，否则很可能验证失败无法上传到PyPi上。</p>
+<p>然后可以到<a href="https://pypi.python.org/pypi" target="_blank" rel="noopener">https://pypi.python.org/pypi</a> 右侧的注册链接注册一个PyPi帐号，注意密码要求是16位以上，反正密码弄复杂点就没错了。</p>
+<p>然后terminal中cd 进入项目目录。执行 python setup.py sdist  进行打包。</p>
+<p>然后执行<code>python setup.py register</code>进行登录，会让你选择是使用现有帐号还是新建帐号</p>
+<p>然后执行<code>python setup.py upload</code>，等一下就上传成功了。</p>
+<p>其实过程非常简单，只不过记录一下以纪念第一次发布PyPi包而已。</p>
+<p><strong> 附：</strong></p>
+<ul>
+<li>Github 项目地址：<a href="https://github.com/zoowii/easy_json.py" target="_blank" rel="noopener">https://github.com/zoowii/easy_json.py</a></li>
+<li>PyPi 项目地址：<a href="https://pypi.python.org/pypi/easy_json" target="_blank" rel="noopener">https://pypi.python.org/pypi/easy_json</a></li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-PHP实践经验总结一" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/02/05/PHP实践经验总结一/">PHP实践经验总结一</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/02/05/PHP实践经验总结一/" class="article-date">
+  <time datetime="2014-02-04T16:00:00.000Z" itemprop="datePublished">2014-02-05</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本文记录我在使用PHP的过程中的一些实践经验，主要做备忘用，因为我用PHP不常用，担心忘掉很多东西。如果某个主题比较复杂，会另开新文记录。(虽然PHP只作为偶尔用的语言,花时间应该不多)</p>
+<ul>
+<li>PHP文件，如无必要，PHP文件最末尾不要加上一个多余的?&gt;，这主要为了避免在末尾偶然敲错键盘多敲了一些字符。如果加了?&gt;，后面的支付会被当做普通文本输出，难以即时发现码入错误。这也是遵循PSR的建议。</li>
+<li>PHP作为一个实质上的模板引擎，当然不是只有&lt;?php ?&gt;这一种嵌入PHP代码的方式，因为作为一种模板引擎的话，每次写入&lt;?php echo $hello; ?&gt;太麻烦了，所以PHP支持一种简写的方式：<code>&lt;?= $hello ?&gt;</code>，这样就使用方便了很多，不过PHP默认不支持简写，需要在php.ini中修改short_open_tag=On，这样就支持了</li>
+<li>建议使用composer管理PHP的包依赖，因为PHP本身的文件include, require的方式太不优雅了，不利于管理代码结构，所以如果不是使用一些开源完整的MVC/CMS框架，而是自己从头开始写的话，建议使用composer + PHP namespace管理代码结构，在这个基础上去使用一些MVC框架，比如joomla framework(这是一个MVC框架，不是Joomla CMS系统)。</li>
+<li>推荐一个PHP解析HTML文本的库，<a href="http://simplehtmldom.sourceforge.net/" target="_blank" rel="noopener">http://simplehtmldom.sourceforge.net/</a>，非常好用，在我用PHP简单爬取一些网页内容的时候帮助很大。</li>
+<li>因为nginx的rewrite规则和apache2的rewrite规则不一样，而很多目前已有的系统中大多支持apache 的rewrite规则（使用.htaccess文件），所以建议依然使用apache2作为PHP网站的服务器，另外nginx作为前端反向代理以及server静态资源。</li>
+<li>推荐PHP网站的静态资源固定放在一些文件夹下，比如/static, /media，使得代码结构类似于：/static/js, /static/css, /static/img, /media这样，这样的话，在nginx中可以只需要提供一两个规则提供对/static, /media目录下的访问，将来需要增加一些比如/static/fonts目录的时候也不用改web服务器的配置，并且通过PHP代码中提供一些例如static_url这类的函数来动态生成静态文件的URL的话，可以很容易在本地静态文件和CDN网络文件切换。而很多常见的直接使用/js, /css, /img的网站文件结构这点上我觉得不太好。</li>
+<li>不要用PHP提供websocket, 长连接，comet等服务，PHP这种每个请求一个进程（线程）的方式（即使用了FastCGI），承担这类应用不太合适。</li>
+<li>阻塞较长时间的服务，尽量不要在一个请求中完成，建议用消息队列提交到后台程序处理，或者用curl异步提交，处理完成后触发一个url通知完成。</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Scheme语言的干净宏怎么实现" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/02/05/Scheme语言的干净宏怎么实现/">Scheme语言的干净宏怎么实现</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/02/05/Scheme语言的干净宏怎么实现/" class="article-date">
+  <time datetime="2014-02-04T16:00:00.000Z" itemprop="datePublished">2014-02-05</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在lisp中，宏的实现有一个小问题，就是宏展开后的结果如果使用了一些符号，这些符号如果与程序上下文中已有的符号重复会产生冲突，因此自然需要避免这个问题了。</p>
+<p>如果是Lisp实现本身可以避免这个问题，就称作干净宏，否则就是不干净的宏。</p>
+<p>common lisp的宏是不干净的，而scheme标准中宏是干净的。</p>
+<p>先不管common lisp，本文只说怎么使得在实现scheme的宏的过程中，实现一个干净的宏系统。</p>
+<p>简单的实现方式就是在展开宏的过程中，执行宏的展开逻辑的代码时，里面的临时symbol都自动替换成一个从来没有使用过的符号。如此一来，自然避免了符号冲突。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-通用尾递归优化算法（包括自我尾递归和A-B-C" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/02/02/通用尾递归优化算法（包括自我尾递归和A-B-C/">通用尾递归优化算法（包括自我尾递归和A-&gt;B, B-&gt;C, C-&gt;A的复杂尾递归的优化）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/02/02/通用尾递归优化算法（包括自我尾递归和A-B-C/" class="article-date">
+  <time datetime="2014-02-01T16:00:00.000Z" itemprop="datePublished">2014-02-02</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>关于通用的尾递归的识别，请参看我的另一片博文《浅谈尾递归的定义和判定方法》</p>
+<p>本文讲述我对怎么对各种复杂的尾递归的通用性优化方法的思考。</p>
+<p>因为是思考过程中写的，如有疏漏，非常欢迎指正。</p>
+<p>为了方便描述，本文代码使用Scheme Racket，部分地方可能会带有一点Python或者伪代码。</p>
+<p>首先给出一个简单的尾递归调用的例子：</p>
+<pre><code>(define (foo n)
+  (if (&gt; n 20140000)
+    (begin (display &quot;foo&quot;) n)
+      (bar (+ n 1))))
+
+(define (bar n)
+  (if (&gt; n 20130000)
+    (begin (display &quot;bar&quot;) n)
+    (foo (+ n 2))))
+
+(display (foo 1234))
+</code></pre><p>这是一个没有意义的例子，因为20130000&lt;20140000，所以始终会输出bar2013000x，不过用来分析尾递归足够了。</p>
+<p>上面例子的结果是bar20130002，如果没有实现尾递归优化或者尾调用优化，则会栈溢出。这是一个很简单也很普遍的尾递归的例子，当foo==bar时，这个例子就退化成尾递归调用自身的最简单尾递归的形式。至于更复杂的尾递归情形，与这个例子大同小异，所以本文就用这个例子描述。</p>
+<p>在我的另一篇博客中描述了一种基于continuation的计算模型，可以用来实现带有continuation的LISP，所以本文也基于continuation给出两种自己的方法。</p>
+<p>第一种方法是基于我另一篇博客中描述的<code>f(env, continuation)=(env2, continuation2)</code>的LISP计算模型的。因为根据我之前的博客《浅谈尾递归的定义和判定方法》，解释器/编译器在执行代码前就可以知道，在函数集{foo, bar}中，其中所有函数都是尾递归的。这样在执行到foo函数中的调用函数bar时，只要将continuation的指针指向bar函数的函数体开头，把bar的参数放入env down之后的新env中即可，得到的env和cont用来进行下一次f(env, cont)=(env2, cont2)。相当于不改变函数本身的结构，而是将函数调用简化成一次类似goto的操作。这其实应该是尾调用优化，不过基于我这种计算模型没有堆栈概念的特点，这种尾调用优化差不多具有了尾递归优化的全部优点。</p>
+<p>第二种方法是基于continuation和状态机。将函数foo和bar分成多个单元，为了方便描述，起名逻辑单元（普通代码），分支单元（if判断等），尾递归调用单元（尾递归调用另一个函数的部分），结尾单元（非尾递归调用的函数foo/bar的最后执行的代码）。这种方法就是将foo和bar函数完全改造成一个新的函数，这个函数包括了函数foo和bar的全部逻辑，同时具有函数foo和bar的全部功能，是一种replacement。</p>
+<p>下面给出第二种方法的scheme伪代码，主要描述思路和方法，具体完善之后再做：</p>
+<pre><code>(define f (state params)
+  &quot;state可以是很多个状态，包括开始，结束，处于每个逻辑单元和分支单元的状态等&quot;
+  (let* ((current-params params) ;; 当前参数。这两个symbol实际上应该使用特殊的不会被用户使用的名称，比如特殊名称规则，只能被系统使用，不能用户代码中使用的等
+         (cond 根据foo和bar中的所有分支单元的逻辑的状态机，接收一个状态，返回下一个状态))
+    (return-value nil))
+  (while (not (= state &quot;end&quot;))
+         (begin
+           修改env，清空当前层除函数f中固定的symbol如cond,current-params之外的所有key=&gt;value对。并且把current-params中的值
+           根据state执行不同的逻辑单元，或者根据state执行不同的结尾单元并修改return-value
+           根据state执行不同的尾递调用单元，主要是调整current-params
+           ))
+  return-value)
+</code></pre><p>经过这种代码级别的转换后，尾递归调用自然就转换成了一个循环的方式，从而完成了尾递归优化，不再需要解释器或编译器做其他处理，把转换后的代码直接解释执行或编译执行就可以了。</p>
+<p>水平所限，难免缺漏。如果发现问题，欢迎指正，如果有我没说明白的，也欢迎邮件联系。谢谢！</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-基于f-env-cont-to-env2-cont2的scheme解释器的实现原理" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/01/24/基于f-env-cont-to-env2-cont2的scheme解释器的实现原理/">基于f(env,cont)=(env2,cont2)的scheme解释器的实现原理</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/01/24/基于f-env-cont-to-env2-cont2的scheme解释器的实现原理/" class="article-date">
+  <time datetime="2014-01-23T16:00:00.000Z" itemprop="datePublished">2014-01-24</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <pre><code>public class Scheme {
+ public static (SEnv, SContinuation) f(env, cont) {
+  // scheme解释器的逻辑
+  if(cont.nextForm() is 加法) {
+   return (env, cont执行nextForm()的加法操作后的结果)
+  } else if(cont.nextForm() is 函数调用) { // 如果是形如(f (g 123))的调用，nextForm不是f调用，而是g调用
+   env.down()
+   put 函数调用g的参数到env中
+   var newCont = 由cont生成，newCont指向cont中的nextForm()的函数调用体内部
+  }
+ }
+ public static void main() {
+  SEnv env = SEnv.init();
+  SContinuation cont = SContinuation.initFromCode(code);
+  while(cont.notEmpty()) {
+   env, cont = f(env, cont)
+  }
+ }
+}
+</code></pre><p>关于这个基于<code>f(env, cont)=(env2, cont2)</code>的计算模型用java实现的demo见<a href="https://github.com/zoowii/lisp-continuation" target="_blank" rel="noopener">https://github.com/zoowii/lisp-continuation</a>。注意，这个demo无法运行，因为没有完成，只是给出代码结构和主要代码，对一些细节没有完善。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Scheme的continuation的实现方式-SchemePy" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/01/23/Scheme的continuation的实现方式-SchemePy/">Scheme的continuation的实现方式(SchemePy)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/01/23/Scheme的continuation的实现方式-SchemePy/" class="article-date">
+  <time datetime="2014-01-22T16:00:00.000Z" itemprop="datePublished">2014-01-23</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在Lisp的一些方言中有一种特别的东西，叫做continuation，尤其是在Scheme语言中。</p>
+<p>不过其实continuation也不是lisp特有的东西，其他语言中也有本质上相同或类似的东西，也许不叫一样的名字。只不过scheme中直接把continuation的控制权限交给coder自己，能够由程序员自己控制它。</p>
+<p>然后，本文说的是怎么实现continuation的，首先要给出continuation的定义。</p>
+<p>以状态机的模型定义计算机的话，可以把一个计算机看做是下面这个函数<br>f(S) = S, 其中S是计算机状态的集合，f就是计算机的程序逻辑</p>
+<p>再具体一点，具体到scheme的执行中去，状态集合S就是scheme的上下文环境（env），接下来要执行的程序（continuation），词法作用域（非必须，以下不考虑）</p>
+<p>上下文env就是一个记录名称key=&gt;值的记录，这个值可以是基本数值，也可以是一块内存的指针（地址），不过这不影响本文主题，以下直接把所有env中的值看做是对象的应用，不考虑内存的影响增加复杂度。同时env要有一个记录上一层级的指针，指向另一个env。所以上下文env的结构大致如下（一个list结构，列表的一个节点是一个map对象）：</p>
+<pre><code>                                       -&gt; parent = null
+                                       -&gt;key3 =&gt; value3
+                                       -&gt;key2 =&gt; value2
+- parent(default = null) -----------------------------&gt;- -key1 =&gt; value1
+-  key1=&gt; value1
+- key2 =&gt; value2
+--&lt;-----------------------------------------另一个env
+</code></pre><ul>
+<li>continuation就是保存下接下来要执行的代码</li>
+<li>f 就是一个循环，不断接受env和continuation，执行固定的逻辑，返回结果重新再次执行</li>
+</ul>
+<p>然后上面的f(S) = S就相当于<br><code>f(env, continuation) = (env2, continuation2)</code></p>
+<p>这个式子应用到图灵计算机中就是：</p>
+<ul>
+<li>env就是内存中的数据区</li>
+<li>continuation就是内存中的指令序列，和PC计数器</li>
+<li>f就是图灵计算机中从指令序列中按PC计数器读取下一条指令，在CPU中执行，对内存数据进行操作（得到env2），然后PC计数器+1(得到continuation2)</li>
+</ul>
+<p>简便起见，用一段简单的scheme代码描述上面过程</p>
+<p>给一个continuation的大概结构先：</p>
+<pre><code>{
+    code_list: ..., 一个scheme的列表，运行时可能会动态修改
+    current: code_list中的当前位置的ID（当前位置可以是code_list中某个元素，或者一个list中的某些位置）
+}
+</code></pre><p>看代码：</p>
+<pre><code>(define a 100)
+(define (fib n)
+  (if (&lt; n 3)
+  1
+  (+ (fib (- n 1)
+     (fib (- n 2)))))
+(display (fib a))
+</code></pre><p>解释执行时，最开始的状态是<code>env= {}, continuation={code_list: ..., current: null}</code></p>
+<p>然后开始运行后，比如运行到(define a 100)时，执行之前continuation的current指向这个列表，执行则修改env，并且将current指向下一个位置，结束一次执行。</p>
+<p>至于scheme中的call/cc，因为continuation也是一个scheme对象，调用call/cc时把这个对象作为参数传递给调用call/cc时的参数（一个函数g），在g的执行过程中，如果调用了这个continuation(命名cont），则把这个cont替换掉当前的continuation并继续执行</p>
+<p>先睡了，下次有空再说详细点</p>
+<p>PS:</p>
+<ol>
+<li>关于这个基于f(env, cont)=(env2, cont2)的计算模型用java实现的demo见<a href="https://github.com/zoowii/lisp-continuation" target="_blank" rel="noopener">https://github.com/zoowii/lisp-continuation</a>。注意，这个demo无法运行，因为没有完成，只是给出代码结构和主要代码，对一些细节没有完善。</li>
+</ol>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-关于将Django网站迁移到SAE上的问题" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2014/01/17/关于将Django网站迁移到SAE上的问题/">关于将Django网站迁移到SAE上的问题</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/01/17/关于将Django网站迁移到SAE上的问题/" class="article-date">
+  <time datetime="2014-01-16T16:00:00.000Z" itemprop="datePublished">2014-01-17</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>因为个人算是业余股民，偶尔会需要看看股市行情，但有懒得打开客户端，有的电脑也没装。晚上直接搜也不好查看个性化信息比如自选股什么的，所以之前有做过一个很简单的股票查看网站，只有自己一个人使用。使用Python3+Django开发，用requests抓取数据，使用gunicorn+sqlite部署到自己的VPS上，虽然目前还是0.0.1版，开发出第一个版本后就没改过了，不过勉强够自己使用了。</p>
+<p>不过因为自己的VPS是在美国纽约，速度比较慢，所以考虑到速度的原因，想迁移到国内的云服务上，既省得自己管理，便宜还速度快。</p>
+<p>所以今天晚上做了下迁移，首先是使用python2.7替换python3，这个很顺利，除了有几个文件有中午注释，文件开头加上# coding: UTF-8就好了。然后把sqlite转成mysql，python manage.py syncdb再用navicat神器把有数据的业务表迁移过去，导出sql，导入sae phpmyadmin就好了。数据库和python环境迁移成功。</p>
+<p>然后是代码了， 因为使用了django1.6 ，所以要手动拷贝sae中没有的库到一个lib文件夹下,<br><code>os.path.insert(0, lib文件夹路径)</code>即可。</p>
+<p>django settings中的修改，因为使用了dj_database_url，所以在index.wsgi中用sae.const中的mysql的用户名密码等信息给<code>os.environ[&#39;DATABASE_URL&#39;]</code>赋值即可。</p>
+<p>差不多了，上传代码运行，然后报错，在调用requests库时，报conn.sock.settimeout(…)中conn.sock为None。网上一搜是2013年后半年对urllib3库的一次修改造成的BUG，<a href="https://github.com/kennethreitz/requests/blame/master/requests/packages/urllib3/connectionpool.py#L307" target="_blank" rel="noopener">https://github.com/kennethreitz/requests/blame/master/requests/packages/urllib3/connectionpool.py#L307</a>，把第307, 308行的</p>
+<pre><code>else:
+    conn.sock.settimeout(read_timeout)
+</code></pre><p>中的”else:”改成”elif conn.sock: “即可。</p>
+<p>再次运行，成功。</p>
+<p>网址：<a href="http://stockkit.sinaapp.com/" target="_blank" rel="noopener">http://stockkit.sinaapp.com/</a></p>
+<p>不过说一句，SAE的静态文件加载太慢了啊，都是几百毫秒的级别，虽然还是比美国VPS快，但还是快得有限啊。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+</article>
+
+
+  
+  
+    <nav id="page-nav">
+      <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/3/">Next &raquo;</a>
+    </nav>
+  
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

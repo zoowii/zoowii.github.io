@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>XML文档安全查询的几种方法概述 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="最简单的就是根据安全策略对结果的XML文档逐个节点遍历，返回有权限查询的结果  另外两种方法 ，  方法一：  一种是类似数据库的视图方式，首先根据实际数据XML文档或者初始化时定义好XML文档的完整结构，就像定义数据库的物理表一样。对于数据XML文档，可以定义一趟DTD对节点进行约束，比如声明资源名称，权限约束，也可以不这样使用，直接根据现有的XML文档定义下文说的安全策略。对这个数据源XML结">
+<meta name="keywords" content="软件工程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="XML文档安全查询的几种方法概述">
+<meta property="og:url" content="http://zoowii.com/2013/12/21/XML文档安全查询的几种方法概述/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="最简单的就是根据安全策略对结果的XML文档逐个节点遍历，返回有权限查询的结果  另外两种方法 ，  方法一：  一种是类似数据库的视图方式，首先根据实际数据XML文档或者初始化时定义好XML文档的完整结构，就像定义数据库的物理表一样。对于数据XML文档，可以定义一趟DTD对节点进行约束，比如声明资源名称，权限约束，也可以不这样使用，直接根据现有的XML文档定义下文说的安全策略。对这个数据源XML结">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.880Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="XML文档安全查询的几种方法概述">
+<meta name="twitter:description" content="最简单的就是根据安全策略对结果的XML文档逐个节点遍历，返回有权限查询的结果  另外两种方法 ，  方法一：  一种是类似数据库的视图方式，首先根据实际数据XML文档或者初始化时定义好XML文档的完整结构，就像定义数据库的物理表一样。对于数据XML文档，可以定义一趟DTD对节点进行约束，比如声明资源名称，权限约束，也可以不这样使用，直接根据现有的XML文档定义下文说的安全策略。对这个数据源XML结">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-XML文档安全查询的几种方法概述" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      XML文档安全查询的几种方法概述
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/12/21/XML文档安全查询的几种方法概述/" class="article-date">
+  <time datetime="2013-12-20T16:20:26.000Z" itemprop="datePublished">2013-12-21</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>最简单的就是根据安全策略对结果的XML文档逐个节点遍历，返回有权限查询的结果</p>
+<p><strong> 另外两种方法 </strong>，</p>
+<ul>
+<li><p>方法一：<br>  一种是类似数据库的视图方式，首先根据实际数据XML文档或者初始化时定义好XML文档的完整结构，就像定义数据库的物理表一样。对于数据XML文档，可以定义一趟DTD对节点进行约束，比如声明资源名称，权限约束，也可以不这样使用，直接根据现有的XML文档定义下文说的安全策略。对这个数据源XML结构，生成DTD格式或者自定义格式，相当于RDBMS系统中的物理表的结构，也称作物理表。<br>  然后使用XPATH或者类似CSS Selector的语法定义安全策略，语法规则可能很多条，可能可以根据相互之间的优先级构造一棵树。然后可以根据安全策略中的每个角色（以RBAC,Role Based Access Control模型为例），结合物理表的结构，生成一个视图DTD或者自定义格式，类似于RDBMS中的视图，称作角色视图表。<br>  在用户查询时，假设是用XPATH查询，或者用户角色或权限后，和上文的角色视图表结合，生成一个临时的视图DTD或者自定义结构，类似于RDBMS中的临时表结构，称作结果视图表。<br>  最后使用这个结果视图表从数据源中查询数据并返回。</p>
+</li>
+<li><p>方法二：<br>  这种方法是在定义安全策略或安全规则后，针对用户查询的XPATH，结合用户的权限和对应的安全规则，重新构造这个查询XPATH，然后使用新的XPATH向数据源查询数据并返回。这种方法同样需要上文中的构造物理表和定义安全规则的步骤。</p>
+</li>
+</ul>
+<p>两种方法孰优孰劣不具体实现也不好说，具体实现也可能会有各种问题，暂时不管。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2013/12/29/关于easy-install和pip的默认源pypi-python-org被中国大陆以外的局域网隔绝的解决方法/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          关于easy_install和pip的默认源pypi.python.org被中国大陆以外的局域网隔绝的解决方法
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/12/21/Mac清理本地备份以清理硬盘空间/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Mac清理本地备份以清理硬盘空间</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

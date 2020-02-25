@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>easy_install.py, 一个简单的Python的json序列号和反序列化库, 同时记录第一次发布PyPi包 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="这两天因为一个很小的项目，又把有段时间没用的Django捡起来了 虽然Django让很多有洁癖的Pythonist很不爽，但是Django最大的优点也差不多是仅剩的优点就是强大的管理后台自动生成功能。对一些web前端界面不重要甚至根本没有的项目，这个优点很好很强大。 因为需求关系，需要将Django数据库查询的结果json化输出，所以又翻了下Python的json库。 不过因为Django的ORM">
+<meta name="keywords" content="Python">
+<meta property="og:type" content="article">
+<meta property="og:title" content="easy_install.py, 一个简单的Python的json序列号和反序列化库, 同时记录第一次发布PyPi包">
+<meta property="og:url" content="http://zoowii.com/2014/03/03/easy-install-py-一个简单的Python的json序列号和反序列化库-同时记录第一次发布PyPi包/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="这两天因为一个很小的项目，又把有段时间没用的Django捡起来了 虽然Django让很多有洁癖的Pythonist很不爽，但是Django最大的优点也差不多是仅剩的优点就是强大的管理后台自动生成功能。对一些web前端界面不重要甚至根本没有的项目，这个优点很好很强大。 因为需求关系，需要将Django数据库查询的结果json化输出，所以又翻了下Python的json库。 不过因为Django的ORM">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.883Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="easy_install.py, 一个简单的Python的json序列号和反序列化库, 同时记录第一次发布PyPi包">
+<meta name="twitter:description" content="这两天因为一个很小的项目，又把有段时间没用的Django捡起来了 虽然Django让很多有洁癖的Pythonist很不爽，但是Django最大的优点也差不多是仅剩的优点就是强大的管理后台自动生成功能。对一些web前端界面不重要甚至根本没有的项目，这个优点很好很强大。 因为需求关系，需要将Django数据库查询的结果json化输出，所以又翻了下Python的json库。 不过因为Django的ORM">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-easy-install-py-一个简单的Python的json序列号和反序列化库-同时记录第一次发布PyPi包" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      easy_install.py, 一个简单的Python的json序列号和反序列化库, 同时记录第一次发布PyPi包
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/03/03/easy-install-py-一个简单的Python的json序列号和反序列化库-同时记录第一次发布PyPi包/" class="article-date">
+  <time datetime="2014-03-02T16:00:00.000Z" itemprop="datePublished">2014-03-03</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这两天因为一个很小的项目，又把有段时间没用的Django捡起来了</p>
+<p>虽然Django让很多有洁癖的Pythonist很不爽，但是Django最大的优点也差不多是仅剩的优点就是强大的管理后台自动生成功能。对一些web前端界面不重要甚至根本没有的项目，这个优点很好很强大。</p>
+<p>因为需求关系，需要将Django数据库查询的结果json化输出，所以又翻了下Python的json库。</p>
+<p>不过因为Django的ORM是紧耦合的，使用Django自带的django.core.serializers来序列化产生的格式也不适合，找了一下也没找到方便自定义的方法。使用Python的json库使用起来也繁琐不方便，需要定义一个有点复杂的serializer函数并且和Django的ORM一起用有点不适应。也因为我的需求比较简单，觉得做一个满足自己需求的json包是很简单的事情，所以就动笔写了。</p>
+<p>项目名称easy_json.py</p>
+<p>写好后其实没几行代码，但是在我的使用场景中比json.dumps和Django自带的json库方便太多了，所以打算放到PyPi上共享。其实这才是本文的主题，记录我第一次发布Python包到PyPi上 :)</p>
+<p>根据网上找的和我自己实践的结果，需要先在项目目录下新建一个setup.py文件，里面的结构大致如下：</p>
+<pre><code>from setuptools import setup, find_packages
+
+setup(
+    name=&apos;easy_json&apos;,
+    version=&apos;0.0.1&apos;,
+    keywords=(&apos;json&apos;, &apos;easy_json&apos;, &apos;simple&apos;, &apos;Django&apos;),
+    description=&apos;a python json serialize/deserialize library which is easy to use&apos;,
+    license=&apos;MIT License&apos;,
+    install_requires=[],
+    author=&apos;zoowii&apos;,
+    author_email=&apos;1992zhouwei@gmail.com&apos;,
+    packages=find_packages(),
+    platforms=&apos;any&apos;,
+)
+</code></pre><p>注意不能随便增加属性，否则很可能验证失败无法上传到PyPi上。</p>
+<p>然后可以到<a href="https://pypi.python.org/pypi" target="_blank" rel="noopener">https://pypi.python.org/pypi</a> 右侧的注册链接注册一个PyPi帐号，注意密码要求是16位以上，反正密码弄复杂点就没错了。</p>
+<p>然后terminal中cd 进入项目目录。执行 python setup.py sdist  进行打包。</p>
+<p>然后执行<code>python setup.py register</code>进行登录，会让你选择是使用现有帐号还是新建帐号</p>
+<p>然后执行<code>python setup.py upload</code>，等一下就上传成功了。</p>
+<p>其实过程非常简单，只不过记录一下以纪念第一次发布PyPi包而已。</p>
+<p><strong> 附：</strong></p>
+<ul>
+<li>Github 项目地址：<a href="https://github.com/zoowii/easy_json.py" target="_blank" rel="noopener">https://github.com/zoowii/easy_json.py</a></li>
+<li>PyPi 项目地址：<a href="https://pypi.python.org/pypi/easy_json" target="_blank" rel="noopener">https://pypi.python.org/pypi/easy_json</a></li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2014/03/05/Continuation的树结构与更新遍历查找算法/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Continuation的树结构与更新遍历查找算法
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/02/05/PHP实践经验总结一/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">PHP实践经验总结一</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>PHP获取payload | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="PHP 中的$_POST只是在POST请求的Content-Type为url-encoded-form-…. 时的内容，但如果不是这个Content-Type，一般请求内容是在HTTP请求的BODY（request payload）中（不一定，HTTP请求是可以构造的）。而用$_POST读取这个payload内容就不行了，因为这个BODY内容是在HTTP请求的BODY中，类似于标准输入（事实是不同">
+<meta name="keywords" content="PHP, Web">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PHP获取payload">
+<meta property="og:url" content="http://zoowii.com/2013/08/28/PHP获取payload/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="PHP 中的$_POST只是在POST请求的Content-Type为url-encoded-form-…. 时的内容，但如果不是这个Content-Type，一般请求内容是在HTTP请求的BODY（request payload）中（不一定，HTTP请求是可以构造的）。而用$_POST读取这个payload内容就不行了，因为这个BODY内容是在HTTP请求的BODY中，类似于标准输入（事实是不同">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.876Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="PHP获取payload">
+<meta name="twitter:description" content="PHP 中的$_POST只是在POST请求的Content-Type为url-encoded-form-…. 时的内容，但如果不是这个Content-Type，一般请求内容是在HTTP请求的BODY（request payload）中（不一定，HTTP请求是可以构造的）。而用$_POST读取这个payload内容就不行了，因为这个BODY内容是在HTTP请求的BODY中，类似于标准输入（事实是不同">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-PHP获取payload" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      PHP获取payload
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/08/28/PHP获取payload/" class="article-date">
+  <time datetime="2013-08-27T16:00:00.000Z" itemprop="datePublished">2013-08-28</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>PHP 中的$_POST只是在POST请求的Content-Type为url-encoded-form-…. 时的内容，但如果不是这个Content-Type，一般请求内容是在HTTP请求的BODY（request payload）中（不一定，HTTP请求是可以构造的）。而用$_POST读取这个payload内容就不行了，因为这个BODY内容是在HTTP请求的BODY中，类似于标准输入（事实是不同的），需要用file_get_contents(‘php://input’)读取</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2013/11/12/About-Http-Payload/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          About-Http-Payload
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/08/22/简单的工作流引擎的设计/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">简单的工作流引擎的设计</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

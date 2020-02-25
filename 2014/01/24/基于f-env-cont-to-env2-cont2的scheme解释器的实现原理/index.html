@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>基于f(env,cont)=(env2,cont2)的scheme解释器的实现原理 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="public class Scheme {  public static (SEnv, SContinuation) f(env, cont) {   // scheme解释器的逻辑   if(cont.nextForm() is 加法) {    return (env, cont执行nextForm()的加法操作后的结果)   } else if(cont.nextForm() is 函数调用">
+<meta name="keywords" content="Scheme">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于f(env,cont)=(env2,cont2)的scheme解释器的实现原理">
+<meta property="og:url" content="http://zoowii.com/2014/01/24/基于f-env-cont-to-env2-cont2的scheme解释器的实现原理/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="public class Scheme {  public static (SEnv, SContinuation) f(env, cont) {   // scheme解释器的逻辑   if(cont.nextForm() is 加法) {    return (env, cont执行nextForm()的加法操作后的结果)   } else if(cont.nextForm() is 函数调用">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.900Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于f(env,cont)=(env2,cont2)的scheme解释器的实现原理">
+<meta name="twitter:description" content="public class Scheme {  public static (SEnv, SContinuation) f(env, cont) {   // scheme解释器的逻辑   if(cont.nextForm() is 加法) {    return (env, cont执行nextForm()的加法操作后的结果)   } else if(cont.nextForm() is 函数调用">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-基于f-env-cont-to-env2-cont2的scheme解释器的实现原理" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      基于f(env,cont)=(env2,cont2)的scheme解释器的实现原理
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2014/01/24/基于f-env-cont-to-env2-cont2的scheme解释器的实现原理/" class="article-date">
+  <time datetime="2014-01-23T16:00:00.000Z" itemprop="datePublished">2014-01-24</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <pre><code>public class Scheme {
+ public static (SEnv, SContinuation) f(env, cont) {
+  // scheme解释器的逻辑
+  if(cont.nextForm() is 加法) {
+   return (env, cont执行nextForm()的加法操作后的结果)
+  } else if(cont.nextForm() is 函数调用) { // 如果是形如(f (g 123))的调用，nextForm不是f调用，而是g调用
+   env.down()
+   put 函数调用g的参数到env中
+   var newCont = 由cont生成，newCont指向cont中的nextForm()的函数调用体内部
+  }
+ }
+ public static void main() {
+  SEnv env = SEnv.init();
+  SContinuation cont = SContinuation.initFromCode(code);
+  while(cont.notEmpty()) {
+   env, cont = f(env, cont)
+  }
+ }
+}
+</code></pre><p>关于这个基于<code>f(env, cont)=(env2, cont2)</code>的计算模型用java实现的demo见<a href="https://github.com/zoowii/lisp-continuation" target="_blank" rel="noopener">https://github.com/zoowii/lisp-continuation</a>。注意，这个demo无法运行，因为没有完成，只是给出代码结构和主要代码，对一些细节没有完善。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2014/02/02/通用尾递归优化算法（包括自我尾递归和A-B-C/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          通用尾递归优化算法（包括自我尾递归和A-&gt;B, B-&gt;C, C-&gt;A的复杂尾递归的优化）
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2014/01/23/Scheme的continuation的实现方式-SchemePy/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Scheme的continuation的实现方式(SchemePy)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

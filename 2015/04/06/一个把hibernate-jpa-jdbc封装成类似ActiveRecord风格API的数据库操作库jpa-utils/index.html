@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>一个把hibernate/jpa/jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本博客系统使用Java Web实现,其中数据库层操作虽然直接写SQL或者使用MyBatis比较可控,但是我对于快糙猛的项目一向懒得慢慢写,所以挺久之前封装过一个类似ActiveRecord的数据库操作库,是对Hibernate/JPA/jdbc的封装,从而在上层使用时比较方便,又可以随时fallback到使用下层的Hibernate/JPA/jdbc. 项目名叫做jpa-utils 项目地址: [">
+<meta name="keywords" content="Java">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一个把hibernate&#x2F;jpa&#x2F;jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils">
+<meta property="og:url" content="http://zoowii.com/2015/04/06/一个把hibernate-jpa-jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="本博客系统使用Java Web实现,其中数据库层操作虽然直接写SQL或者使用MyBatis比较可控,但是我对于快糙猛的项目一向懒得慢慢写,所以挺久之前封装过一个类似ActiveRecord的数据库操作库,是对Hibernate/JPA/jdbc的封装,从而在上层使用时比较方便,又可以随时fallback到使用下层的Hibernate/JPA/jdbc. 项目名叫做jpa-utils 项目地址: [">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.890Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一个把hibernate&#x2F;jpa&#x2F;jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils">
+<meta name="twitter:description" content="本博客系统使用Java Web实现,其中数据库层操作虽然直接写SQL或者使用MyBatis比较可控,但是我对于快糙猛的项目一向懒得慢慢写,所以挺久之前封装过一个类似ActiveRecord的数据库操作库,是对Hibernate/JPA/jdbc的封装,从而在上层使用时比较方便,又可以随时fallback到使用下层的Hibernate/JPA/jdbc. 项目名叫做jpa-utils 项目地址: [">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-一个把hibernate-jpa-jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      一个把hibernate/jpa/jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2015/04/06/一个把hibernate-jpa-jdbc封装成类似ActiveRecord风格API的数据库操作库jpa-utils/" class="article-date">
+  <time datetime="2015-04-05T16:27:13.000Z" itemprop="datePublished">2015-04-06</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本博客系统使用Java Web实现,其中数据库层操作虽然直接写SQL或者使用MyBatis比较可控,<br>但是我对于快糙猛的项目一向懒得慢慢写,所以挺久之前封装过一个类似ActiveRecord的数据库操作库,<br>是对Hibernate/JPA/jdbc的封装,从而在上层使用时比较方便,又可以随时fallback到使用下层的Hibernate/JPA/jdbc. 项目名叫做jpa-utils</p>
+<pre><code>项目地址: [https://github.com/zoowii/jpa-utils](https://github.com/zoowii/jpa-utils)
+</code></pre><h2 id="目前的特性包括"><a href="#目前的特性包括" class="headerlink" title="目前的特性包括"></a>目前的特性包括</h2><ul>
+<li>底层基于JPA或者Hibernate的Session/SessionFactory，基于HQL/SQL，比自己再轮一个类HQL稳定</li>
+<li>也提供直接基于jdbc的支持,从而可以不依赖Hibernate等ORM,也方便直接和jdbc Connection, MyBatis, DbUtils, 数据库连接池等库直接集成使用</li>
+<li>直接基于jdbc Connection的话,ORM映射部分目前只支持MySQL和H2数据库,其他数据库待支持</li>
+<li>可以自动从JPA配置创建管理session,也可以手动指定EntityManagerFactory/EntityManager/SessionFactory(hibernate)/Session(hibernate)来构造jpa-utils中的Session来使用,还可以直接从jdbc Connection构造Session</li>
+<li>提供类似ActiveRecord的使用方便友好的API，特别是查询API</li>
+<li>查询的核心Finder类可以单独使用，直接使用到现有的使用JPA或Hibernate的代码中，只需要根据现有EntityManager/Session(hibernate)构造一个jpa-utils的session，然后使用Finder类来查询就好了</li>
+<li>支持类似MyBatis的执行编程式XML中的SQL(TODO)</li>
+</ul>
+<p>因为没有发布到公网maven repo,所以如果要用,要么maven install,要么发布到自己meven repo私服,要么mvn package成jar后自己使用</p>
+<h2 id="使用DEMO"><a href="#使用DEMO" class="headerlink" title="使用DEMO"></a>使用DEMO</h2><figure class="highlight sqf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// maven</span></span><br><span class="line">!!! First deploy it <span class="keyword">to</span> you <span class="built_in">local</span> maven nexus, <span class="keyword">then</span>.</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">     &lt;<span class="built_in">groupId</span>&gt;com.zoowii&lt;/<span class="built_in">groupId</span>&gt;</span><br><span class="line">     &lt;artifactId&gt;jpa-utils&lt;/artifactId&gt;</span><br><span class="line">     &lt;version&gt;x.y.z&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line"><span class="comment">// create</span></span><br><span class="line">Session session = EntitySession.currentSession(); <span class="comment">// or Session.getSession(persistentUnitName);</span></span><br><span class="line">session.begin();</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">for</span> (int i = <span class="number">0</span>; i &lt; <span class="number">10</span>; ++i) &#123;</span><br><span class="line">        Employee employee = new Employee();</span><br><span class="line">        employee.<span class="built_in">setName</span>(<span class="string">"employee_"</span> + StringUtil.randomString(<span class="number">10</span>));</span><br><span class="line">        employee.setAge(new <span class="built_in">Random</span>().nextInt(<span class="number">100</span>));</span><br><span class="line">        employee.save(); <span class="comment">// or employee.save(session);</span></span><br><span class="line">        logger.info(<span class="string">"new employee "</span> + employee.getId());</span><br><span class="line">    &#125;</span><br><span class="line">    session.commit();</span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">    session.rollback();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// query</span></span><br><span class="line">Session session = Session.currentSession();</span><br><span class="line">session.begin();</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    Query&lt;Employee&gt; query = Employee.<span class="built_in">find</span>.where().gt(<span class="string">"age"</span>, <span class="number">50</span>);</span><br><span class="line">    query = query.limit(<span class="number">8</span>);</span><br><span class="line">    <span class="built_in">List</span>&lt;Employee&gt; employees = query.all(); <span class="comment">// or query.all(session);</span></span><br><span class="line">    <span class="keyword">for</span> (int i = <span class="number">0</span>; i &lt; employees.<span class="built_in">size</span>(); ++i) &#123;</span><br><span class="line">        Employee employee = employees.get(i);</span><br><span class="line">        logger.info((i + <span class="number">1</span>) + <span class="string">". employee "</span> + employee.getId());</span><br><span class="line">    &#125;</span><br><span class="line">    logger.info(<span class="string">"total: "</span> + query.<span class="built_in">count</span>()); <span class="comment">// or query.count(session);</span></span><br><span class="line">    session.commit();</span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">    session.rollback();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2015/04/06/一个简单的正则表达式和语法分析引擎的JavaScript实现parser-js/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          一个简单的正则表达式和语法分析引擎的JavaScript实现parser.js
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/04/06/程序语言的词法作用域中同名变量的rename/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">程序语言的词法作用域中同名变量的rename</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

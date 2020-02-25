@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>JavaScript的事件机制和执行队列的一个小验证 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="今天突然想到，javascript的事件机制就是在事件发生后将事件的毁掉函数添加到代码的执行队列后面去，本身是单线程的。然后想到，同一个代码块的代码是一次性添加到执行队列中的，所以只要是定义回调之后的普通代码（非回调），都肯定在之前那个回调函数之前执行，无论这个回调函数对应的事件发生得多快，哪怕立刻发送，间隔时间为0，也肯定在定义这个回调的代码块的后续代码之后执行，因为那段代码块在之前已经被添加到">
+<meta name="keywords" content="JavaScript">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript的事件机制和执行队列的一个小验证">
+<meta property="og:url" content="http://zoowii.com/2013/12/20/JavaScript的事件机制和执行队列的一个小验证/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="今天突然想到，javascript的事件机制就是在事件发生后将事件的毁掉函数添加到代码的执行队列后面去，本身是单线程的。然后想到，同一个代码块的代码是一次性添加到执行队列中的，所以只要是定义回调之后的普通代码（非回调），都肯定在之前那个回调函数之前执行，无论这个回调函数对应的事件发生得多快，哪怕立刻发送，间隔时间为0，也肯定在定义这个回调的代码块的后续代码之后执行，因为那段代码块在之前已经被添加到">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.870Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JavaScript的事件机制和执行队列的一个小验证">
+<meta name="twitter:description" content="今天突然想到，javascript的事件机制就是在事件发生后将事件的毁掉函数添加到代码的执行队列后面去，本身是单线程的。然后想到，同一个代码块的代码是一次性添加到执行队列中的，所以只要是定义回调之后的普通代码（非回调），都肯定在之前那个回调函数之前执行，无论这个回调函数对应的事件发生得多快，哪怕立刻发送，间隔时间为0，也肯定在定义这个回调的代码块的后续代码之后执行，因为那段代码块在之前已经被添加到">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-JavaScript的事件机制和执行队列的一个小验证" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      JavaScript的事件机制和执行队列的一个小验证
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/12/20/JavaScript的事件机制和执行队列的一个小验证/" class="article-date">
+  <time datetime="2013-12-19T16:00:00.000Z" itemprop="datePublished">2013-12-20</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>今天突然想到，javascript的事件机制就是在事件发生后将事件的毁掉函数添加到代码的执行队列后面去，本身是单线程的。然后想到，同一个代码块的代码是一次性添加到执行队列中的，所以只要是定义回调之后的普通代码（非回调），都肯定在之前那个回调函数之前执行，无论这个回调函数对应的事件发生得多快，哪怕立刻发送，间隔时间为0，也肯定在定义这个回调的代码块的后续代码之后执行，因为那段代码块在之前已经被添加到执行队列中了。</p>
+<p>间隔时间为0的回调很简单，setTimeout(function(){…}, 0)就可以了</p>
+<p>为了验证这个猜测，我写了两段简单的JS代码试验了一下。</p>
+<p>代码片段1：</p>
+<pre><code>var state = null;
+
+function test() {
+    // console.log(&apos;a1&apos;);
+    if(!state || state===&apos;a3&apos;) {
+        state=&apos;a1&apos;;
+    } else {
+        throw new Error(state);
+    }
+    setTimeout(function() {
+        // console.log(&apos;a3&apos;);
+        if(state === &apos;a2&apos;) {
+            state = &apos;a3&apos;;
+        } else {
+            throw new Error(state);
+        }
+    }, 0);
+
+    if(state ===&apos;a1&apos;) {
+        state = &apos;a2&apos;;
+    } else {
+        throw new Error(state);
+    }
+    // console.log(&apos;a2&apos;);
+}
+
+test()
+</code></pre><p>这段代码不报错，符合上面的说法</p>
+<p>代码片段2（上面函数执行1000次）</p>
+<pre><code>var state = null;
+
+function test() {
+    // console.log(&apos;a1&apos;);
+    if(!state || state===&apos;a3&apos;) {
+        state=&apos;a1&apos;;
+    } else {
+        throw new Error(state);
+    }
+
+    setTimeout(function() {
+        // console.log(&apos;a3&apos;);
+        if(state === &apos;a2&apos;) {
+            state = &apos;a3&apos;;
+        } else {
+            throw new Error(state);
+        }
+    }, 0);
+
+    if(state ===&apos;a1&apos;) {
+        state = &apos;a2&apos;;
+    } else {
+        throw new Error(state);
+    }
+
+    // console.log(&apos;a2&apos;);
+}
+
+console.log(&apos;start test&apos;);
+
+for(var i=0;i&lt;1000;++i) {
+    console.log(&quot;loop &quot;, i);
+    test();
+}
+
+console.log(&apos;end test&apos;);
+</code></pre><p>因为整个for循环都是同一个代码段，在任何一次回调发生之前都被加载到执行队列中，所以setTimeout的任何一次回调都发生在1000次test函数执行之后。也就是全部1000次test函数执行完之前都不会执行任何一次setTimeout回调。然后在state变化时，第二次循环就应循环最开始变成a1状态时就应该报错error a2. 执行结果和预测完全符合。</p>
+<p>这只是突然想到的一个简单的验证，也在吃证明了javascript是一个语言模型方面非常简单的语言，除了坑太多。</p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2013/12/21/浅谈尾递归的定义和判定方法/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          浅谈尾递归的定义和判定方法
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2013/11/29/关于大数的乘法/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">关于大数的乘法</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

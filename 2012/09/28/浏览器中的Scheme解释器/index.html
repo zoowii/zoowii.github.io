@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>浏览器中的Scheme解释器 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前两天用javascript写了一个scheme解释器，已经可以运行在node.js和浏览器中。代码放在github上了。http://github.com/zoowii/SchemeScript，  Features   另外，http://aboutzoowii.duapp.com/app/js/SchemeScript 中可以在线演示 支持自然数，布尔值(true, false)，字符串(“">
+<meta name="keywords" content="JavaScript, Scheme">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浏览器中的Scheme解释器">
+<meta property="og:url" content="http://zoowii.com/2012/09/28/浏览器中的Scheme解释器/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="前两天用javascript写了一个scheme解释器，已经可以运行在node.js和浏览器中。代码放在github上了。http://github.com/zoowii/SchemeScript，  Features   另外，http://aboutzoowii.duapp.com/app/js/SchemeScript 中可以在线演示 支持自然数，布尔值(true, false)，字符串(“">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.903Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="浏览器中的Scheme解释器">
+<meta name="twitter:description" content="前两天用javascript写了一个scheme解释器，已经可以运行在node.js和浏览器中。代码放在github上了。http://github.com/zoowii/SchemeScript，  Features   另外，http://aboutzoowii.duapp.com/app/js/SchemeScript 中可以在线演示 支持自然数，布尔值(true, false)，字符串(“">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-浏览器中的Scheme解释器" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      浏览器中的Scheme解释器
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2012/09/28/浏览器中的Scheme解释器/" class="article-date">
+  <time datetime="2012-09-27T16:00:00.000Z" itemprop="datePublished">2012-09-28</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>前两天用javascript写了一个scheme解释器，已经可以运行在node.js和浏览器中。代码放在github上了。<br><a href="http://github.com/zoowii/SchemeScript" target="_blank" rel="noopener">http://github.com/zoowii/SchemeScript</a>，</p>
+<p><strong> Features </strong></p>
+<ul>
+<li>另外，<a href="http://aboutzoowii.duapp.com/app/js/SchemeScript" target="_blank" rel="noopener">http://aboutzoowii.duapp.com/app/js/SchemeScript</a> 中可以在线演示</li>
+<li>支持自然数，布尔值(true, false)，字符串(“…”)，变量定义</li>
+<li>可以定义函数了，并调用自定义函数，可以嵌套。示例中有求斐波那契数列的</li>
+<li>有list, cons, car, cdr, list-len, n-th, typeof, +, -, *, /等函数</li>
+<li>支持lambda表达式，柯里化</li>
+<li>所有合法的标识符都可以被重定义，包括内置函数名</li>
+<li>控制结构有if, cond[else]，都是作为内置函数实现的，可以赋给其他标识符，也可以重定义为其他值；cond控制结构的每一个条件分支都可以是多个form，执行时依次执行并返回最后一个form的值</li>
+<li>定义变量用define，定义函数用defn，也可以用define+lambda表达式定义函数</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2012/11/22/jquery选择地区插件（选择省市区，有地区代码/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          jquery选择地区插件（选择省市区，有地区代码)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2012/09/27/关于我的web服务器nodejsws/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">关于我的web服务器nodejsws</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>

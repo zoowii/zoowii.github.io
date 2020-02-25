@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>Java执行机制 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Java 源码编译—–javac将java源码编译为class java源文件(.java)=&amp;gt;分析和输入到符号表=&amp;gt;注解(annotation)处理=&amp;gt;语义分析和生成class文件  class文件的内容  class文件的内容如下：  结构信息：class文件格式版本号等信息=&amp;gt;所以高版本的jdk生成的.class文件低版本的jre无法运行，反之可以运行 元数据：类继承">
+<meta name="keywords" content="Java">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java执行机制">
+<meta property="og:url" content="http://zoowii.com/2013/01/16/Java执行机制/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="Java 源码编译—–javac将java源码编译为class java源文件(.java)=&amp;gt;分析和输入到符号表=&amp;gt;注解(annotation)处理=&amp;gt;语义分析和生成class文件  class文件的内容  class文件的内容如下：  结构信息：class文件格式版本号等信息=&amp;gt;所以高版本的jdk生成的.class文件低版本的jre无法运行，反之可以运行 元数据：类继承">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T12:41:04.871Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java执行机制">
+<meta name="twitter:description" content="Java 源码编译—–javac将java源码编译为class java源文件(.java)=&amp;gt;分析和输入到符号表=&amp;gt;注解(annotation)处理=&amp;gt;语义分析和生成class文件  class文件的内容  class文件的内容如下：  结构信息：class文件格式版本号等信息=&amp;gt;所以高版本的jdk生成的.class文件低版本的jre无法运行，反之可以运行 元数据：类继承">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-Java执行机制" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Java执行机制
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2013/01/16/Java执行机制/" class="article-date">
+  <time datetime="2013-01-15T16:01:20.000Z" itemprop="datePublished">2013-01-16</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Java 源码编译—–javac将java源码编译为class</p>
+<p>java源文件(.java)=&gt;分析和输入到符号表=&gt;注解(annotation)处理=&gt;语义分析和生成class文件</p>
+<p><strong> class文件的内容 </strong></p>
+<p>class文件的内容如下：</p>
+<ul>
+<li>结构信息：class文件格式版本号等信息=&gt;所以高版本的jdk生成的.class文件低版本的jre无法运行，反之可以运行</li>
+<li>元数据：类继承、接口实现、属性和方法的声明、常量池等信息<br>*方法信息：Java源文件中语句、表达式对应的信息，包括：字节码、异常处理器表、求值栈与局部变量区大小、求值栈的类型记录、调试用符号信息</li>
+</ul>
+<p>例子：</p>
+<pre><code>// Hello.java
+public class Hello {
+    public static void sayHi() {
+        System.out.println(&quot;Hello World!&quot;);
+    }
+    public static int add(int x, int y) {
+        return x + y;
+    }
+    public static void main(String[] args) {
+        sayHi();
+        System.out.println(add(4, 5));
+    }
+}
+</code></pre><p>使用javac -g Hello.java(使用javac Hello.java也可，但调试信息更少)产生Hello.class文件</p>
+<p>再使用javap -c Hello可以反编译字节码，输出如下：</p>
+<pre><code>// Compiled from &quot;Hello.java&quot;
+public class Hello {
+public Hello();
+    Code:
+       0: aload_0
+       1: invokespecial #1
+       // Method java/lang/Object.&quot;&quot;:()V
+       4: return        
+
+  public static void sayHi();
+    Code:
+       0: getstatic     #2
+       // Field java/lang/System.out:Ljava/io/PrintStream;
+       3: ldc           #3
+       // String Hello World!
+       5: invokevirtual #4
+       // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+       8: return        
+
+  public static int add(int, int);
+    Code:
+       0: iload_0
+       1: iload_1
+       2: iadd
+       3: ireturn       
+
+  public static void main(java.lang.String[]);
+    Code:
+       0: invokestatic  #5
+       // Method sayHi:()V
+       3: getstatic     #2
+       // Field java/lang/System.out:Ljava/io/PrintStream;
+       6: iconst_4
+       7: iconst_5
+       8: invokestatic  #6
+       // Method add:(II)I
+      11: invokevirtual #7
+      // Method java/io/PrintStream.println:(I)V
+      14: return
+}
+</code></pre><p><strong> 类执行机制 </strong></p>
+<ul>
+<li><p>字节码解释执行<br>  jvm有一套中间码，如invokestatic（调用static方法）、invokevirtual（调用对象实例方法）、invokeinterface（调用接口的方法）和invokespecial（调用private方法和方法）等。<br>  因此，jvm可以把这写中间码的指令解释执行，就像类似于脚本语言执行。只不过脚本语言执行的源文件是可读的文本文件，<br>  而jvm解释执行执行的是不可读的.class文件。</p>
+</li>
+<li><p>字节码编译执行<br>  解释执行效率低，所以jvm可以在运行时把.class文件编译成机器码执行，这就是JIT编译。<br>  所谓的Hotspot 就是执行时对执行频率高的代码编译执行，执行频率低的代码解释执行。</p>
+</li>
+</ul>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2013/02/20/PHP与Java中运行时获取调用类方法（静态方法）的类名的方法/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          PHP与Java中运行时获取调用类方法（静态方法）的类名的方法
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2012/12/19/关于Java对象占用内存大小/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">关于Java对象占用内存大小</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
