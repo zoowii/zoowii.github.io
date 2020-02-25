@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+  <title>给dotnet core项目设置nuget国内镜像源 | 专业闭关三十年</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="写了个用.Net Core的小工具，部署时发现NuGet被墙，所以本文记录了下修改国内镜像的方法以及可用镜像. azure在国内有个NuGet的mirror镜像，可以修改NuGet设置来使用. 1234567891011121314&amp;lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&amp;gt;&amp;lt;configuration&amp;gt;    &amp;lt;packageSour">
+<meta name="keywords" content="DotNet, .Net">
+<meta property="og:type" content="article">
+<meta property="og:title" content="给dotnet core项目设置nuget国内镜像源">
+<meta property="og:url" content="http://zoowii.com/2020/02/25/dotnetcore-nuget-mirror-config/index.html">
+<meta property="og:site_name" content="专业闭关三十年">
+<meta property="og:description" content="写了个用.Net Core的小工具，部署时发现NuGet被墙，所以本文记录了下修改国内镜像的方法以及可用镜像. azure在国内有个NuGet的mirror镜像，可以修改NuGet设置来使用. 1234567891011121314&amp;lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&amp;gt;&amp;lt;configuration&amp;gt;    &amp;lt;packageSour">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-02-25T15:44:42.366Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="给dotnet core项目设置nuget国内镜像源">
+<meta name="twitter:description" content="写了个用.Net Core的小工具，部署时发现NuGet被墙，所以本文记录了下修改国内镜像的方法以及可用镜像. azure在国内有个NuGet的mirror镜像，可以修改NuGet设置来使用. 1234567891011121314&amp;lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&amp;gt;&amp;lt;configuration&amp;gt;    &amp;lt;packageSour">
+  
+    <link rel="alternative" href="/atom.xml" title="专业闭关三十年" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="/css/style.css">
+  
+
+</head></html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <div class="outer">
+        <section id="main"><article id="post-dotnetcore-nuget-mirror-config" class="article article-type-post" itemscope itemprop="blogPost">
+  
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      给dotnet core项目设置nuget国内镜像源
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-meta">
+      <a href="/2020/02/25/dotnetcore-nuget-mirror-config/" class="article-date">
+  <time datetime="2020-02-25T15:38:23.000Z" itemprop="datePublished">2020-02-25</time>
+</a>
+      
+    </div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>写了个用.Net Core的小工具，部署时发现NuGet被墙，所以本文记录了下修改国内镜像的方法以及可用镜像.</p>
+<p>azure在国内有个NuGet的mirror镜像，可以修改NuGet设置来使用.</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">packageSources</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">add</span> <span class="attr">key</span>=<span class="string">"cdn.azure.cn"</span> <span class="attr">value</span>=<span class="string">"https://nuget.cdn.azure.cn/v3/index.json"</span> <span class="attr">protocolVersion</span>=<span class="string">"3"</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">add</span> <span class="attr">key</span>=<span class="string">"nuget.org"</span> <span class="attr">value</span>=<span class="string">"https://api.nuget.org/v3/index.json"</span> <span class="attr">protocolVersion</span>=<span class="string">"3"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">packageSources</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">packageRestore</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">add</span> <span class="attr">key</span>=<span class="string">"enabled"</span> <span class="attr">value</span>=<span class="string">"True"</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">add</span> <span class="attr">key</span>=<span class="string">"automatic"</span> <span class="attr">value</span>=<span class="string">"True"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">packageRestore</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bindingRedirects</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">add</span> <span class="attr">key</span>=<span class="string">"skip"</span> <span class="attr">value</span>=<span class="string">"False"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">bindingRedirects</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>用以上内容修改或者替换Linux中的<code>~/.nuget/NuGet/NuGet.Config</code>或者Windows中的<code>%AppData%\NuGet\NuGet.Config</code>路径中的文件，如果用docker发布的在Dockerfile中自行修改即可.</p>
+<p>本文参考了 <a href="https://www.cnblogs.com/cmt/p/nuget-mirror.html" target="_blank" rel="noopener">https://www.cnblogs.com/cmt/p/nuget-mirror.html</a></p>
+
+      
+
+      
+        
+    </div>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2020/02/25/levelsql-design/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">一个关系数据库LevelSQL的设计和实现</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        <aside id="sidebar">
+  <nav class="menus">
+  	<ul>
+  		<li><a href="/"><i class="icon icon-home"></i></a></li>
+  		
+			<li><a href="/archives"><i class="icon icon-fenlei"></i></a></li>
+  		
+  		
+			<li><a href="/tags"><i class="icon icon-tag"></i></a></li>
+  		
+  		
+  			<li><a href="https://github.com/" target="_blank"><i class="icon icon-github"></i></a></li>
+  		
+  	</ul>
+  </nav>
+  <a id="go-top" href="#"><i class="icon icon-up"></i></a>
+</aside>
+      </div>
+      <footer id="footer">
+  
+	<div id="footer-info" class="inner">
+	  &copy; 2020 zoowii 
+	  - Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+	  - Theme <a href="https://github.com/Alex-fun/hexo-theme-jane/" target="_blank">Jane</a>
+	</div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/tags" class="mobile-nav-link">Tag</a>
+  
+    <a href="https://github.com/" class="mobile-nav-link">Github</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div>
+</body>
+</html>
